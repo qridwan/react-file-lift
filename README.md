@@ -422,7 +422,7 @@ Contributions are welcome! Please read our [Contributing Guide](./CONTRIBUTING.m
 
 ## License 📄
 
-MIT © [Your Name](https://github.com/qridwan/react-file-lift)
+MIT © [Ridwan](https://github.com/qridwan/react-file-lift)
 
 ## Support 💪
 
