@@ -1,0 +1,361 @@
+/* React File Lift - Default Styles */
+
+/* Dropzone Styles */
+.rfl-dropzone {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #fafafa;
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rfl-dropzone:hover {
+  border-color: #007bff;
+  background-color: #f0f8ff;
+}
+
+.rfl-dropzone:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.rfl-dropzone--active {
+  border-color: #28a745;
+  background-color: #f0fff0;
+}
+
+.rfl-dropzone--reject {
+  border-color: #dc3545;
+  background-color: #fff5f5;
+}
+
+.rfl-dropzone--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.rfl-dropzone__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rfl-dropzone__icon {
+  font-size: 2rem;
+  opacity: 0.6;
+}
+
+.rfl-dropzone__text {
+  font-size: 1rem;
+  color: #666;
+  margin: 0;
+}
+
+.rfl-dropzone__accept {
+  font-size: 0.875rem;
+  color: #999;
+  margin-top: 0.25rem;
+}
+
+/* File Uploader Styles */
+.rfl-file-uploader {
+  width: 100%;
+}
+
+.rfl-file-uploader__files {
+  margin-top: 1.5rem;
+}
+
+.rfl-file-uploader__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.rfl-file-uploader__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.rfl-file-uploader__clear-all {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s ease;
+}
+
+.rfl-file-uploader__clear-all:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.rfl-file-uploader__clear-all:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.rfl-file-uploader__previews {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+/* File Preview Styles */
+.rfl-file-preview {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1rem;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.rfl-file-preview__content {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.rfl-file-preview__thumbnail {
+  position: relative;
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rfl-file-preview__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rfl-file-preview__file-icon {
+  font-size: 1.5rem;
+  opacity: 0.6;
+}
+
+.rfl-file-preview__status-icon {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.rfl-file-preview__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.rfl-file-preview__name {
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 0.25rem;
+}
+
+.rfl-file-preview__size {
+  font-size: 0.875rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.rfl-file-preview__status {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.rfl-file-preview__error {
+  font-size: 0.875rem;
+  color: #dc3545;
+  margin-top: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rfl-file-preview__progress {
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rfl-file-preview__progress-bar {
+  flex: 1;
+  height: 4px;
+  background: #e0e0e0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.rfl-file-preview__progress-fill {
+  height: 100%;
+  background: #007bff;
+  transition: width 0.2s ease;
+}
+
+.rfl-file-preview__progress-text {
+  font-size: 0.75rem;
+  color: #666;
+  min-width: 30px;
+  text-align: right;
+}
+
+.rfl-file-preview__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.rfl-file-preview__button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  text-decoration: none;
+  color: inherit;
+}
+
+.rfl-file-preview__button:hover {
+  background: #f0f0f0;
+}
+
+.rfl-file-preview__button--remove:hover {
+  background: #fee;
+}
+
+.rfl-file-preview__button--retry:hover {
+  background: #fff3cd;
+}
+
+.rfl-file-preview__button--view:hover {
+  background: #e6f3ff;
+}
+
+.rfl-file-preview__compression-info {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #e0e0e0;
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.rfl-file-preview__compression-text {
+  margin-bottom: 0.25rem;
+}
+
+.rfl-file-preview__compression-savings {
+  color: #28a745;
+  font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .rfl-file-uploader__previews {
+    grid-template-columns: 1fr;
+  }
+
+  .rfl-dropzone {
+    padding: 1.5rem;
+    min-height: 100px;
+  }
+
+  .rfl-dropzone__text {
+    font-size: 0.875rem;
+  }
+
+  .rfl-file-preview__content {
+    flex-wrap: wrap;
+  }
+
+  .rfl-file-preview__actions {
+    flex-direction: row;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .rfl-dropzone {
+    background-color: #1a1a1a;
+    border-color: #404040;
+    color: #e0e0e0;
+  }
+
+  .rfl-dropzone:hover {
+    background-color: #2a2a2a;
+    border-color: #007bff;
+  }
+
+  .rfl-dropzone__text {
+    color: #ccc;
+  }
+
+  .rfl-dropzone__accept {
+    color: #999;
+  }
+
+  .rfl-file-uploader__title {
+    color: #e0e0e0;
+  }
+
+  .rfl-file-preview {
+    background: #1a1a1a;
+    border-color: #404040;
+  }
+
+  .rfl-file-preview__name {
+    color: #e0e0e0;
+  }
+
+  .rfl-file-preview__size,
+  .rfl-file-preview__status {
+    color: #ccc;
+  }
+
+  .rfl-file-preview__thumbnail {
+    background: #2a2a2a;
+  }
+
+  .rfl-file-preview__button:hover {
+    background: #2a2a2a;
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "name": "react-file-lift",
+  "version": "1.0.0",
+  "description": "A powerful React file uploader with drag-and-drop, image compression, and cloud storage integration (S3, Cloudinary, Supabase, Firebase)",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "build:watch": "rollup -c -w",
+    "dev": "rollup -c -w",
+    "copy:demo": "xcopy \"dist\" \"react-file-lift-demo\\node_modules\\react-file-lift\" /E /Y",
+    "build:demo": "npm run build && npm run copy:demo",
+    "demo": "npm run build:demo && cd react-file-lift-demo && npm start",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "type-check": "tsc --noEmit",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run type-check && npm run build"
+  },
+  "keywords": [
+    "react",
+    "file-upload",
+    "drag-drop",
+    "image-compression",
+    "s3",
+    "cloudinary",
+    "supabase",
+    "firebase",
+    "cloud-storage",
+    "typescript"
+  ],
+  "author": "qridwan",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qridwan/react-file-lift.git"
+  },
+  "bugs": {
+    "url": "https://github.com/qridwan/react-file-lift/issues"
+  },
+  "homepage": "https://github.com/qridwan/react-file-lift#readme",
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.879.0",
+    "@aws-sdk/s3-request-presigner": "^3.879.0",
+    "@supabase/supabase-js": "^2.57.0",
+    "browser-image-compression": "^2.0.2",
+    "cloudinary": "^1.41.3",
+    "firebase": "^10.14.1"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.8",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.3.1",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@types/jest": "^29.5.14",
+    "@types/react": "^18.3.24",
+    "@types/react-dom": "^18.3.7",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.57.1",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "rollup": "^4.50.0",
+    "rollup-plugin-dts": "^6.2.3",
+    "rollup-plugin-peer-deps-external": "^2.2.4",
+    "rollup-plugin-postcss": "^4.0.2",
+    "ts-jest": "^29.4.1",
+    "typescript": "^5.9.2"
+  }
+}
