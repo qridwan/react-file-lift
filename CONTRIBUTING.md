@@ -1,226 +1,501 @@
-# Development Guide 🛠️
+# Contributing to React File Lift 🚀
 
-This guide covers development setup, building, testing, and contributing to React File Lift.
+Thank you for your interest in contributing to React File Lift! This document provides comprehensive guidelines for contributing to our open-source project.
 
-## Development Setup
+## Table of Contents
+
+- [Code of Conduct](#code-of-conduct)
+- [Getting Started](#getting-started)
+- [Development Setup](#development-setup)
+- [Project Architecture](#project-architecture)
+- [Development Workflow](#development-workflow)
+- [Code Standards](#code-standards)
+- [Testing Guidelines](#testing-guidelines)
+- [Documentation Standards](#documentation-standards)
+- [Pull Request Process](#pull-request-process)
+- [Release Process](#release-process)
+- [Community Guidelines](#community-guidelines)
+
+## Code of Conduct
+
+This project adheres to a code of conduct that we expect all contributors to follow. Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md) in all interactions.
+
+## Getting Started
 
 ### Prerequisites
 
-- Node.js (v16 or higher)
-- npm, yarn, or pnpm
+- **Node.js**: v18.0.0 or higher (LTS recommended)
+- **Package Manager**: npm (v9+), yarn (v3+), or pnpm (v8+)
+- **Git**: v2.30+ with proper configuration
+- **IDE**: VS Code (recommended) with TypeScript and ESLint extensions
 
-### Installation
+### Quick Start
 
 ```bash
-# Clone the repository
-git clone https://github.com/qridwan/react-file-lift.git
+# Fork and clone the repository
+git clone https://github.com/YOUR_USERNAME/react-file-lift.git
 cd react-file-lift
 
 # Install dependencies
 npm install
+
+# Verify installation
+npm run verify-setup
+
+# Start development
+npm run dev
 ```
 
 ### Development Scripts
 
 ```bash
-# Start development build with watch mode
-npm run dev
+# Development
+npm run dev              # Start development build with watch mode
+npm run dev:demo         # Start demo app with hot reload
 
-# Build the package
-npm run build
+# Building
+npm run build            # Build the package for production
+npm run build:demo       # Build and copy to demo app
+npm run build:watch      # Build with watch mode
 
-# Run tests
-npm test
+# Testing
+npm test                 # Run all tests
+npm run test:watch       # Run tests in watch mode
+npm run test:coverage    # Run tests with coverage report
+npm run test:ci          # Run tests for CI environment
 
-# Run tests in watch mode
-npm run test:watch
+# Code Quality
+npm run lint             # Lint all source files
+npm run lint:fix         # Fix auto-fixable linting issues
+npm run type-check       # TypeScript type checking
+npm run format           # Format code with Prettier
+npm run format:check     # Check code formatting
 
-# Lint code
-npm run lint
-
-# Fix linting issues
-npm run lint:fix
-
-# Type checking
-npm run type-check
+# Package Management
+npm run copy:demo        # Copy dist to demo app
+npm run update:demo      # Build and update demo app
+npm run publish:dry      # Dry run npm publish
 ```
 
-## Project Structure
+## Development Setup
 
-```
-react-file-lift/
-├── src/                      # Source code
-│   ├── components/           # React components
-│   │   ├── FileUploader.tsx  # Main uploader component
-│   │   ├── Dropzone.tsx      # Drag & drop zone
-│   │   └── FilePreview.tsx   # File preview component
-│   ├── storage/              # Cloud storage providers
-│   │   ├── aws.ts           # AWS S3 integration
-│   │   ├── cloudinary.ts    # Cloudinary integration
-│   │   ├── supabase.ts      # Supabase integration
-│   │   └── index.ts         # Storage exports
-│   ├── utils/               # Utility functions
-│   │   ├── compression.ts   # Image compression
-│   │   ├── file.ts         # File utilities
-│   │   └── __tests__/      # Unit tests
-│   ├── types/              # TypeScript definitions
-│   ├── styles/             # CSS styles
-│   └── index.ts            # Main export file
-├── examples/               # Usage examples
-├── dist/                   # Built package (generated)
-└── docs/                   # Documentation
-```
+### Environment Configuration
 
-## Building
-
-The package uses Rollup for building:
-
-```bash
-npm run build
-```
-
-This creates:
-
-- `dist/index.js` - CommonJS build
-- `dist/index.esm.js` - ES modules build
-- `dist/index.d.ts` - TypeScript definitions
-- `dist/index.css` - Extracted CSS
-
-## Testing
-
-We use Jest with jsdom for testing:
-
-```bash
-# Run all tests
-npm test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Run tests with coverage
-npm test -- --coverage
-```
-
-### Test Structure
-
-- Unit tests are located in `__tests__` folders
-- Component tests use React Testing Library
-- Utility functions have comprehensive test coverage
-
-## Code Quality
-
-### ESLint Configuration
-
-- Extends recommended rules for TypeScript and React
-- Enforces consistent code style
-- Includes React Hooks rules
-
-### TypeScript
-
-- Strict mode enabled
-- Full type coverage required
-- No `any` types allowed in production code
-
-## Contributing
-
-### Development Workflow
-
-1. **Fork and Clone**
+1. **Clone and Setup**
 
    ```bash
-   git fork https://github.com/qridwan/react-file-lift.git
-   git clone your-fork-url
+   git clone https://github.com/qridwan/react-file-lift.git
    cd react-file-lift
    npm install
    ```
 
-2. **Create Feature Branch**
+2. **Environment Variables**
 
    ```bash
+   # Copy environment template
+   cp .env.example .env.local
+
+   # Configure your cloud storage credentials
+   # See CLOUD_SETUP.md for detailed instructions
+   ```
+
+3. **IDE Configuration**
+   - Install recommended VS Code extensions
+   - Configure Prettier and ESLint
+   - Enable TypeScript strict mode
+
+### Verification
+
+```bash
+# Verify your setup
+npm run verify-setup
+
+# This will check:
+# - Node.js version compatibility
+# - Dependencies installation
+# - TypeScript configuration
+# - ESLint configuration
+# - Test environment setup
+```
+
+## Project Architecture
+
+### Directory Structure
+
+```
+react-file-lift/
+├── .github/                 # GitHub workflows and templates
+│   ├── workflows/          # CI/CD pipelines
+│   ├── ISSUE_TEMPLATE/     # Issue templates
+│   └── PULL_REQUEST_TEMPLATE.md
+├── docs/                   # Documentation
+│   ├── api/               # API documentation
+│   ├── guides/            # User guides
+│   └── examples/          # Code examples
+├── examples/              # Standalone examples
+│   ├── basic/             # Basic usage example
+│   ├── cloudinary/        # Cloudinary integration
+│   ├── aws-s3/           # AWS S3 integration
+│   └── supabase/         # Supabase integration
+├── react-file-lift-demo/  # Interactive demo app
+├── src/                   # Source code
+│   ├── components/        # React components
+│   │   ├── FileUploader.tsx
+│   │   ├── Dropzone.tsx
+│   │   ├── FilePreview.tsx
+│   │   └── __tests__/     # Component tests
+│   ├── storage/           # Cloud storage providers
+│   │   ├── aws.ts
+│   │   ├── cloudinary.ts
+│   │   ├── supabase.ts
+│   │   ├── firebase.ts
+│   │   ├── index.ts
+│   │   └── __tests__/     # Storage tests
+│   ├── utils/             # Utility functions
+│   │   ├── compression.ts
+│   │   ├── file.ts
+│   │   └── __tests__/     # Utility tests
+│   ├── types/             # TypeScript definitions
+│   │   └── index.ts
+│   ├── styles/            # CSS styles
+│   │   └── index.css
+│   └── index.ts           # Main export file
+├── dist/                  # Built package (generated)
+├── .eslintrc.js          # ESLint configuration
+├── .prettierrc           # Prettier configuration
+├── jest.config.js        # Jest configuration
+├── rollup.config.js      # Rollup configuration
+├── tsconfig.json         # TypeScript configuration
+└── package.json          # Package configuration
+```
+
+### Architecture Principles
+
+1. **Modular Design**: Each storage provider is independent
+2. **Composition over Inheritance**: Components are composable
+3. **Type Safety**: Full TypeScript coverage
+4. **Performance First**: Optimized for bundle size and runtime
+5. **Accessibility**: WCAG 2.1 AA compliant
+6. **Extensibility**: Easy to add new features and providers
+
+## Development Workflow
+
+### Branch Strategy
+
+We use [Git Flow](https://nvie.com/posts/a-successful-git-branching-model/) with the following branches:
+
+- `main`: Production-ready code
+- `develop`: Integration branch for features
+- `feature/*`: Feature development
+- `bugfix/*`: Bug fixes
+- `hotfix/*`: Critical production fixes
+- `release/*`: Release preparation
+
+### Feature Development Process
+
+1. **Create Feature Branch**
+
+   ```bash
+   git checkout develop
+   git pull origin develop
    git checkout -b feature/your-feature-name
    ```
 
-3. **Development**
+2. **Development Guidelines**
 
-   - Write code following existing patterns
-   - Add tests for new functionality
-   - Update documentation as needed
-   - Ensure TypeScript types are complete
+   - Write code following our [Code Standards](#code-standards)
+   - Add comprehensive tests
+   - Update documentation
+   - Ensure TypeScript compliance
+   - Follow accessibility guidelines
 
-4. **Testing**
+3. **Pre-commit Checks**
 
    ```bash
-   npm test
-   npm run lint
-   npm run type-check
-   npm run build
+   npm run pre-commit
+   # This runs: lint, type-check, test, build
    ```
 
-5. **Commit and Push**
+4. **Commit Convention**
+   We follow [Conventional Commits](https://www.conventionalcommits.org/):
 
    ```bash
-   git add .
-   git commit -m "feat: add your feature description"
+   feat: add new storage provider
+   fix: resolve upload progress issue
+   docs: update API documentation
+   test: add unit tests for compression
+   refactor: improve error handling
+   perf: optimize bundle size
+   ```
+
+5. **Push and Create PR**
+   ```bash
    git push origin feature/your-feature-name
+   # Create PR via GitHub interface
    ```
 
-6. **Create Pull Request**
-   - Fill out the PR template
-   - Include examples of the new functionality
-   - Link any related issues
+## Code Standards
 
-### Commit Convention
+### TypeScript Guidelines
 
-We follow Conventional Commits:
+1. **Strict Mode**: All code must pass strict TypeScript checks
+2. **Type Definitions**: Export all public APIs with proper types
+3. **No `any` Types**: Use proper typing or `unknown` when necessary
+4. **Interface Design**: Prefer interfaces over types for object shapes
+5. **Generic Constraints**: Use proper generic constraints
 
-- `feat:` - New features
-- `fix:` - Bug fixes
-- `docs:` - Documentation changes
-- `style:` - Code style changes
-- `refactor:` - Code refactoring
-- `test:` - Test additions/changes
-- `chore:` - Build process/tooling changes
+```typescript
+// ✅ Good
+interface FileUploaderProps {
+  onFilesAdded: (files: FileWithPreview[]) => void;
+  maxSize?: number;
+  accept?: string;
+}
 
-### Adding New Storage Providers
+// ❌ Bad
+interface FileUploaderProps {
+  onFilesAdded: (files: any) => void;
+  maxSize?: any;
+  accept?: any;
+}
+```
 
-To add a new storage provider:
+### React Best Practices
 
-1. Create `src/storage/new-provider.ts`
-2. Implement the storage interface:
-   ```typescript
-   export class NewProviderStorage {
-     async uploadFile(
-       file: File,
-       fileName?: string,
-       onProgress?: (progress: number) => void
-     ): Promise<string> {
-       // Implementation
-     }
-   }
-   ```
-3. Add configuration types to `src/types/index.ts`
-4. Update the factory in `src/storage/index.ts`
-5. Add tests and documentation
-6. Create example usage
+1. **Functional Components**: Use function components with hooks
+2. **Memoization**: Use `React.memo`, `useMemo`, and `useCallback` appropriately
+3. **Custom Hooks**: Extract reusable logic into custom hooks
+4. **Error Boundaries**: Implement proper error handling
+5. **Accessibility**: Follow WCAG 2.1 AA guidelines
+
+```typescript
+// ✅ Good
+const FileUploader = React.memo<FileUploaderProps>(
+  ({ onFilesAdded, maxSize = 10 * 1024 * 1024, accept = "*/*" }) => {
+    const [files, setFiles] = useState<FileWithPreview[]>([]);
+
+    const handleFilesAdded = useCallback(
+      (newFiles: File[]) => {
+        // Implementation
+      },
+      [onFilesAdded]
+    );
+
+    return (
+      <div role="region" aria-label="File upload area">
+        {/* Component content */}
+      </div>
+    );
+  }
+);
+```
 
 ### Performance Guidelines
 
-- Use React.memo for components that receive complex props
-- Implement proper cleanup for object URLs
-- Use web workers for heavy operations when possible
-- Optimize bundle size by avoiding large dependencies
+1. **Bundle Size**: Keep dependencies minimal
+2. **Code Splitting**: Use dynamic imports for large features
+3. **Memory Management**: Clean up object URLs and event listeners
+4. **Rendering Optimization**: Minimize unnecessary re-renders
 
-### Security Considerations
+### Security Standards
 
-- Never expose API secrets in client-side code
-- Use environment variables for configuration
-- Implement proper CORS policies
-- Validate file types and sizes
-- Sanitize file names
+1. **Input Validation**: Validate all file inputs
+2. **XSS Prevention**: Sanitize user inputs
+3. **CSRF Protection**: Use proper tokens for API calls
+4. **Secrets Management**: Never expose API keys in client code
 
-## Publishing
+## Testing Guidelines
 
-### Pre-release Checklist
+### Testing Strategy
+
+We follow a comprehensive testing strategy:
+
+1. **Unit Tests**: Test individual functions and components
+2. **Integration Tests**: Test component interactions
+3. **E2E Tests**: Test complete user workflows
+4. **Visual Regression Tests**: Ensure UI consistency
+5. **Performance Tests**: Monitor bundle size and runtime performance
+
+### Test Structure
+
+```
+src/
+├── components/
+│   ├── FileUploader.tsx
+│   └── __tests__/
+│       ├── FileUploader.test.tsx
+│       ├── FileUploader.integration.test.tsx
+│       └── FileUploader.visual.test.tsx
+├── utils/
+│   ├── compression.ts
+│   └── __tests__/
+│       ├── compression.test.ts
+│       └── compression.performance.test.ts
+└── __mocks__/           # Mock implementations
+    ├── fileMock.ts
+    └── storageMock.ts
+```
+
+### Testing Commands
+
+```bash
+# Unit tests
+npm test
+
+# Watch mode
+npm run test:watch
+
+# Coverage report
+npm run test:coverage
+
+# Integration tests
+npm run test:integration
+
+# E2E tests
+npm run test:e2e
+
+# Visual regression tests
+npm run test:visual
+
+# Performance tests
+npm run test:performance
+```
+
+### Test Requirements
+
+1. **Coverage**: Minimum 90% code coverage
+2. **Accessibility**: Test with screen readers
+3. **Cross-browser**: Test in major browsers
+4. **Mobile**: Test on mobile devices
+5. **Performance**: Meet performance budgets
+
+### Writing Tests
+
+```typescript
+// Component test example
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { FileUploader } from "../FileUploader";
+
+describe("FileUploader", () => {
+  it("should accept files via drag and drop", async () => {
+    const onFilesAdded = jest.fn();
+    render(<FileUploader onFilesAdded={onFilesAdded} />);
+
+    const dropzone = screen.getByRole("region", { name: /file upload area/i });
+
+    fireEvent.drop(dropzone, {
+      dataTransfer: {
+        files: [new File(["content"], "test.txt", { type: "text/plain" })],
+      },
+    });
+
+    await waitFor(() => {
+      expect(onFilesAdded).toHaveBeenCalledWith(
+        expect.arrayContaining([expect.objectContaining({ name: "test.txt" })])
+      );
+    });
+  });
+});
+```
+
+## Documentation Standards
+
+### Code Documentation
+
+1. **JSDoc Comments**: Document all public APIs
+2. **README Updates**: Update relevant documentation
+3. **API Documentation**: Maintain up-to-date API docs
+4. **Examples**: Provide working code examples
+5. **Changelog**: Document all changes
+
+````typescript
+/**
+ * Uploads a file to the configured cloud storage provider
+ * @param file - The file to upload
+ * @param fileName - Optional custom file name
+ * @param onProgress - Optional progress callback
+ * @returns Promise that resolves to the uploaded file URL
+ * @throws {Error} When upload fails or configuration is invalid
+ * @example
+ * ```typescript
+ * const url = await uploadFile(file, 'custom-name.jpg', (progress) => {
+ *   console.log(`Upload progress: ${progress}%`);
+ * });
+ * ```
+ */
+async uploadFile(
+  file: File,
+  fileName?: string,
+  onProgress?: (progress: number) => void
+): Promise<string>
+````
+
+### README Requirements
+
+1. **Installation**: Clear installation instructions
+2. **Quick Start**: Simple usage example
+3. **API Reference**: Complete API documentation
+4. **Examples**: Multiple usage examples
+5. **Troubleshooting**: Common issues and solutions
+
+## Pull Request Process
+
+### PR Requirements
+
+1. **Title**: Use conventional commit format
+2. **Description**: Detailed description of changes
+3. **Tests**: All tests must pass
+4. **Coverage**: Maintain test coverage
+5. **Documentation**: Update relevant docs
+6. **Breaking Changes**: Document any breaking changes
+
+### PR Template
+
+```markdown
+## Description
+
+Brief description of changes
+
+## Type of Change
+
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Breaking change
+- [ ] Documentation update
+
+## Testing
+
+- [ ] Unit tests added/updated
+- [ ] Integration tests added/updated
+- [ ] Manual testing completed
+
+## Checklist
+
+- [ ] Code follows style guidelines
+- [ ] Self-review completed
+- [ ] Documentation updated
+- [ ] No breaking changes (or documented)
+```
+
+### Review Process
+
+1. **Automated Checks**: CI/CD pipeline runs
+2. **Code Review**: At least 2 reviewers
+3. **Testing**: All tests must pass
+4. **Documentation**: Review documentation changes
+5. **Approval**: Maintainer approval required
+
+## Release Process
+
+### Version Management
+
+We follow [Semantic Versioning](https://semver.org/):
+
+- **MAJOR**: Breaking changes
+- **MINOR**: New features (backward compatible)
+- **PATCH**: Bug fixes (backward compatible)
+
+### Release Checklist
 
 - [ ] All tests pass
 - [ ] No linting errors
@@ -229,32 +504,190 @@ To add a new storage provider:
 - [ ] CHANGELOG.md is updated
 - [ ] Version number is bumped
 - [ ] Examples work correctly
+- [ ] Performance benchmarks met
+- [ ] Security audit passed
 
-### Release Process
+### Release Workflow
 
-1. **Version Bump**
+1. **Create Release Branch**
 
    ```bash
-   npm version patch|minor|major
+   git checkout develop
+   git pull origin develop
+   git checkout -b release/v1.2.0
    ```
 
-2. **Build and Test**
+2. **Update Version and Changelog**
 
    ```bash
+   npm version minor
+   # Update CHANGELOG.md
+   ```
+
+3. **Final Testing**
+
+   ```bash
+   npm run test:ci
    npm run build
-   npm test
+   npm run test:integration
    ```
 
-3. **Publish**
+4. **Merge and Tag**
+
+   ```bash
+   git checkout main
+   git merge release/v1.2.0
+   git tag v1.2.0
+   git push origin main --tags
+   ```
+
+5. **Publish**
 
    ```bash
    npm publish
    ```
 
-4. **Create Release**
-   - Tag the release on GitHub
+6. **Create GitHub Release**
    - Write release notes
    - Include migration guide if needed
+   - Announce in community channels
+
+## Community Guidelines
+
+### Communication
+
+1. **Issues**: Use GitHub issues for bug reports and feature requests
+2. **Discussions**: Use GitHub Discussions for questions and ideas
+3. **Discord**: Join our Discord for real-time chat
+4. **Email**: Contact maintainers for security issues
+
+### Getting Help
+
+1. **Documentation**: Check existing docs first
+2. **Issues**: Search existing issues
+3. **Discussions**: Ask in discussions
+4. **Discord**: Join our community
+5. **Create Issue**: If nothing else helps
+
+### Recognition
+
+We recognize contributors through:
+
+- **Contributors List**: Listed in README
+- **Release Notes**: Mentioned in release notes
+- **Badges**: GitHub contributor badges
+- **Swag**: Contributor swag for significant contributions
+
+### Adding New Storage Providers
+
+To add a new storage provider:
+
+1. **Create Provider Class**
+
+   ```typescript
+   // src/storage/new-provider.ts
+   export class NewProviderStorage {
+     private config: NewProviderConfig;
+
+     constructor(config: NewProviderConfig) {
+       this.config = config;
+     }
+
+     async uploadFile(
+       file: File,
+       fileName?: string,
+       onProgress?: (progress: number) => void
+     ): Promise<string> {
+       // Implementation with proper error handling
+     }
+   }
+   ```
+
+2. **Add Configuration Types**
+
+   ```typescript
+   // src/types/index.ts
+   export interface NewProviderConfig {
+     apiKey: string;
+     bucket: string;
+     region?: string;
+   }
+   ```
+
+3. **Update Factory Pattern**
+
+   ```typescript
+   // src/storage/index.ts
+   export function createStorageProvider(config: CloudStorageConfig) {
+     switch (config.provider) {
+       case "new-provider":
+         return new NewProviderStorage(config.config as NewProviderConfig);
+       // ... other providers
+     }
+   }
+   ```
+
+4. **Add Comprehensive Tests**
+
+   ```typescript
+   // src/storage/__tests__/new-provider.test.ts
+   describe("NewProviderStorage", () => {
+     it("should upload file successfully", async () => {
+       // Test implementation
+     });
+   });
+   ```
+
+5. **Create Documentation and Examples**
+   - Add to README
+   - Create example usage
+   - Update API documentation
+
+## Performance Guidelines
+
+### Bundle Optimization
+
+1. **Tree Shaking**: Use ES modules for better tree shaking
+2. **Code Splitting**: Split large features into separate chunks
+3. **Dependency Analysis**: Regular bundle analysis
+4. **Dead Code Elimination**: Remove unused code
+
+### Runtime Performance
+
+1. **Memoization**: Use React.memo for expensive components
+2. **Callback Optimization**: Use useCallback for event handlers
+3. **State Updates**: Minimize unnecessary re-renders
+4. **Memory Management**: Clean up resources properly
+
+### Performance Budgets
+
+- **Initial Bundle**: < 100KB gzipped
+- **Runtime Memory**: < 50MB for file operations
+- **Upload Speed**: > 1MB/s for large files
+- **Time to Interactive**: < 2s
+
+## Security Considerations
+
+### Input Validation
+
+1. **File Types**: Validate MIME types and extensions
+2. **File Sizes**: Enforce size limits
+3. **File Names**: Sanitize and validate file names
+4. **Content Scanning**: Scan for malicious content
+
+### API Security
+
+1. **Authentication**: Use secure authentication methods
+2. **Authorization**: Implement proper access controls
+3. **Rate Limiting**: Prevent abuse
+4. **CORS**: Configure proper CORS policies
+
+### Data Protection
+
+1. **Encryption**: Encrypt sensitive data in transit
+2. **Secrets**: Never expose API keys in client code
+3. **Privacy**: Handle user data responsibly
+4. **Compliance**: Follow GDPR and other regulations
 
 ## Troubleshooting
 
@@ -262,52 +695,101 @@ To add a new storage provider:
 
 **Build Fails**
 
-- Ensure all dependencies are installed
-- Check TypeScript errors
-- Verify Rollup configuration
+- Check Node.js version compatibility
+- Verify all dependencies are installed
+- Check TypeScript configuration
+- Review Rollup configuration
 
 **Tests Fail**
 
-- Check Jest configuration
-- Ensure test environment is set up correctly
-- Verify mock implementations
+- Ensure test environment is properly configured
+- Check mock implementations
+- Verify test data setup
+- Review Jest configuration
 
 **Type Errors**
 
 - Update TypeScript definitions
 - Check import/export statements
-- Ensure peer dependencies are correct
+- Verify peer dependencies
+- Review type declarations
 
-### Getting Help
+**Runtime Errors**
 
-- Check existing issues on GitHub
-- Review documentation and examples
-- Join our Discord community
-- Create a new issue with reproduction steps
+- Check browser compatibility
+- Verify API configurations
+- Review error logs
+- Test with different file types
+
+### Debug Tools
+
+1. **Browser DevTools**: Use for debugging
+2. **React DevTools**: Component debugging
+3. **Bundle Analyzer**: Analyze bundle size
+4. **Performance Profiler**: Identify bottlenecks
 
 ## Architecture Decisions
 
-### Why Rollup?
+### Technology Choices
+
+**Rollup**
 
 - Better tree-shaking for libraries
-- Multiple output formats
+- Multiple output formats (CJS, ESM)
 - Smaller bundle sizes
+- Better plugin ecosystem
 
-### Why TypeScript?
+**TypeScript**
 
 - Better developer experience
 - Compile-time error checking
 - Excellent IDE support
+- Better refactoring capabilities
 
-### Why Separate Storage Providers?
+**Jest + React Testing Library**
 
-- Modularity and maintainability
+- Comprehensive testing framework
+- Great React component testing
+- Excellent mocking capabilities
+- Good performance
+
+**Modular Storage Providers**
+
 - Easy to add new providers
 - Optional dependencies
+- Better maintainability
+- Clear separation of concerns
 
-### Component Design Principles
+### Design Principles
 
-- Composition over inheritance
-- Minimal required props
-- Extensible styling system
-- Accessible by default
+1. **Composition over Inheritance**: Components are composable
+2. **Minimal API Surface**: Simple, focused APIs
+3. **Progressive Enhancement**: Works without JavaScript
+4. **Accessibility First**: WCAG 2.1 AA compliant
+5. **Performance by Default**: Optimized out of the box
+
+## Contributing to Documentation
+
+### Documentation Types
+
+1. **API Documentation**: JSDoc comments
+2. **User Guides**: Step-by-step tutorials
+3. **Examples**: Working code samples
+4. **Architecture Docs**: Technical decisions
+5. **Contributing Guide**: This document
+
+### Writing Guidelines
+
+1. **Clear and Concise**: Easy to understand
+2. **Examples**: Include working code
+3. **Up-to-date**: Keep documentation current
+4. **Searchable**: Use proper headings and keywords
+5. **Accessible**: Follow accessibility guidelines
+
+---
+
+## Thank You! 🙏
+
+Thank you for contributing to React File Lift! Your contributions help make this project better for everyone. If you have any questions or need help, don't hesitate to reach out to our community.
+
+**Happy Coding!** 🚀
