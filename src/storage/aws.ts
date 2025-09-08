@@ -1,20 +1,51 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+/* eslint-disable no-unused-vars */
 import { AWSConfig } from "../types";
 
+// Dynamic imports for peer dependencies
+let S3Client: any;
+let PutObjectCommand: any;
+let getSignedUrl: any;
+
+// Lazy load AWS SDK
+async function loadAWSSDK() {
+  if (!S3Client) {
+    try {
+      const s3Module = await import("@aws-sdk/client-s3");
+      const presignerModule = await import("@aws-sdk/s3-request-presigner");
+
+      S3Client = s3Module.S3Client;
+      PutObjectCommand = s3Module.PutObjectCommand;
+      getSignedUrl = presignerModule.getSignedUrl;
+    } catch (error) {
+      throw new Error(
+        "AWS SDK not found. Please install @aws-sdk/client-s3 and @aws-sdk/s3-request-presigner: npm install @aws-sdk/client-s3 @aws-sdk/s3-request-presigner"
+      );
+    }
+  }
+}
+
 export class AWSStorage {
-  private s3Client: S3Client;
+  private s3Client: any;
   private config: AWSConfig;
+  private sdkLoaded: boolean = false;
 
   constructor(config: AWSConfig) {
     this.config = config;
-    this.s3Client = new S3Client({
-      region: config.region,
-      credentials: {
-        accessKeyId: config.accessKeyId,
-        secretAccessKey: config.secretAccessKey,
-      },
-    });
+    // S3Client will be initialized lazily when first used
+  }
+
+  private async ensureSDKLoaded() {
+    if (!this.sdkLoaded) {
+      await loadAWSSDK();
+      this.s3Client = new S3Client({
+        region: this.config.region,
+        credentials: {
+          accessKeyId: this.config.accessKeyId,
+          secretAccessKey: this.config.secretAccessKey,
+        },
+      });
+      this.sdkLoaded = true;
+    }
   }
 
   /**
@@ -25,6 +56,8 @@ export class AWSStorage {
     fileName?: string,
     onProgress?: (progress: number) => void
   ): Promise<string> {
+    await this.ensureSDKLoaded();
+
     const key = this.generateKey(fileName || file.name);
 
     try {
@@ -56,6 +89,8 @@ export class AWSStorage {
     fileName: string,
     contentType: string
   ): Promise<string> {
+    await this.ensureSDKLoaded();
+
     const key = this.generateKey(fileName);
 
     const command = new PutObjectCommand({

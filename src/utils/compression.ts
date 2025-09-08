@@ -1,5 +1,21 @@
-import imageCompression from 'browser-image-compression';
-import { CompressionOptions } from '../types';
+import { CompressionOptions } from "../types";
+
+// Dynamic import for peer dependency
+let imageCompression: any;
+
+// Lazy load browser-image-compression
+async function loadImageCompression() {
+  if (!imageCompression) {
+    try {
+      const compressionModule = await import("browser-image-compression");
+      imageCompression = compressionModule.default;
+    } catch (error) {
+      throw new Error(
+        "browser-image-compression not found. Please install it: npm install browser-image-compression"
+      );
+    }
+  }
+}
 
 /**
  * Compresses an image file using browser-image-compression
@@ -16,11 +32,13 @@ export async function compressImage(
   } = options;
 
   // Only compress image files
-  if (!file.type.startsWith('image/')) {
+  if (!file.type.startsWith("image/")) {
     return file;
   }
 
   try {
+    await loadImageCompression();
+
     const compressedFile = await imageCompression(file, {
       maxSizeMB,
       maxWidthOrHeight,
@@ -30,7 +48,7 @@ export async function compressImage(
 
     return compressedFile;
   } catch (error) {
-    console.error('Compression failed:', error);
+    console.error("Compression failed:", error);
     // Return original file if compression fails
     return file;
   }
@@ -40,9 +58,9 @@ export async function compressImage(
  * Checks if a file should be compressed based on its type and size
  */
 export function shouldCompressFile(file: File, maxSizeMB: number = 1): boolean {
-  const isImage = file.type.startsWith('image/');
+  const isImage = file.type.startsWith("image/");
   const isLargeFile = file.size > maxSizeMB * 1024 * 1024;
-  
+
   return isImage && isLargeFile;
 }
 
@@ -52,7 +70,8 @@ export function shouldCompressFile(file: File, maxSizeMB: number = 1): boolean {
 export function getCompressionInfo(originalFile: File, compressedFile: File) {
   const originalSizeMB = originalFile.size / (1024 * 1024);
   const compressedSizeMB = compressedFile.size / (1024 * 1024);
-  const compressionRatio = ((originalFile.size - compressedFile.size) / originalFile.size) * 100;
+  const compressionRatio =
+    ((originalFile.size - compressedFile.size) / originalFile.size) * 100;
 
   return {
     originalSize: originalSizeMB,

@@ -5,27 +5,28 @@ import peerDepsExternal from "rollup-plugin-peer-deps-external";
 import postcss from "rollup-plugin-postcss";
 import dts from "rollup-plugin-dts";
 import json from "@rollup/plugin-json";
+import { visualizer } from "rollup-plugin-visualizer";
 import { readFileSync } from "fs";
 
 const packageJson = JSON.parse(readFileSync("./package.json", "utf8"));
 
-// Production build configuration
-const productionConfig = {
+// Bundle analysis configuration
+const analyzeConfig = {
   input: "src/index.ts",
   output: [
     {
       file: packageJson.main,
       format: "cjs",
-      sourcemap: false, // Disable source maps for production
+      sourcemap: false,
       compact: true,
-      inlineDynamicImports: true, // Inline dynamic imports to avoid chunking issues
+      inlineDynamicImports: true,
     },
     {
       file: packageJson.module,
       format: "esm",
-      sourcemap: false, // Disable source maps for production
+      sourcemap: false,
       compact: true,
-      inlineDynamicImports: true, // Inline dynamic imports to avoid chunking issues
+      inlineDynamicImports: true,
     },
   ],
   plugins: [
@@ -33,11 +34,9 @@ const productionConfig = {
     resolve({
       browser: true,
       preferBuiltins: false,
-      // Only resolve what's absolutely necessary
       mainFields: ["browser", "module", "main"],
     }),
     commonjs({
-      // Exclude large dependencies that should be external
       exclude: [
         "aws-sdk",
         "@aws-sdk/client-s3",
@@ -52,7 +51,6 @@ const productionConfig = {
       tsconfig: "./tsconfig.json",
       declaration: true,
       declarationDir: "dist",
-      // Optimize TypeScript compilation
       compilerOptions: {
         target: "es2018",
         module: "esnext",
@@ -65,11 +63,18 @@ const productionConfig = {
       extract: true,
       minimize: true,
     }),
+    // Bundle analyzer plugin
+    visualizer({
+      filename: "dist/bundle-analysis.html",
+      open: true,
+      gzipSize: true,
+      brotliSize: true,
+      template: "treemap", // or "sunburst", "treemap", "network"
+    }),
   ],
   external: [
     "react",
     "react-dom",
-    // Make cloud storage providers external
     "@aws-sdk/client-s3",
     "@aws-sdk/s3-request-presigner",
     "@supabase/supabase-js",
@@ -77,47 +82,11 @@ const productionConfig = {
     "cloudinary",
     "browser-image-compression",
   ],
-  // Tree shaking optimization
   treeshake: {
     moduleSideEffects: false,
     propertyReadSideEffects: false,
     tryCatchDeoptimization: false,
   },
-};
-
-// Development build with source maps
-const developmentConfig = {
-  input: "src/index.ts",
-  output: [
-    {
-      file: packageJson.main.replace(".js", ".dev.js"),
-      format: "cjs",
-      sourcemap: true,
-    },
-    {
-      file: packageJson.module.replace(".js", ".dev.js"),
-      format: "esm",
-      sourcemap: true,
-    },
-  ],
-  plugins: [
-    peerDepsExternal(),
-    resolve({
-      browser: true,
-    }),
-    commonjs(),
-    json(),
-    typescript({
-      tsconfig: "./tsconfig.json",
-      declaration: true,
-      declarationDir: "dist",
-    }),
-    postcss({
-      extract: true,
-      minimize: false,
-    }),
-  ],
-  external: ["react", "react-dom"],
 };
 
 // TypeScript definitions
@@ -128,7 +97,4 @@ const typesConfig = {
   external: [/\.css$/],
 };
 
-// Export configuration based on environment
-export default process.env.NODE_ENV === "development"
-  ? [developmentConfig, typesConfig]
-  : [productionConfig, typesConfig];
+export default [analyzeConfig, typesConfig];

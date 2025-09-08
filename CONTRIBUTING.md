@@ -10,6 +10,7 @@ Thank you for your interest in contributing to React File Lift! This document pr
 - [Project Architecture](#project-architecture)
 - [Development Workflow](#development-workflow)
 - [Code Standards](#code-standards)
+- [Bundle Optimization Guidelines](#bundle-optimization-guidelines)
 - [Testing Guidelines](#testing-guidelines)
 - [Documentation Standards](#documentation-standards)
 - [Pull Request Process](#pull-request-process)
@@ -54,9 +55,12 @@ npm run dev              # Start development build with watch mode
 npm run dev:demo         # Start demo app with hot reload
 
 # Building
-npm run build            # Build the package for production
+npm run build            # Build the package for production (with source maps)
+npm run build:prod       # Build optimized package (no source maps)
+npm run build:dev        # Build development version (with source maps)
 npm run build:demo       # Build and copy to demo app
 npm run build:watch      # Build with watch mode
+npm run analyze          # Analyze bundle size and composition
 
 # Testing
 npm test                 # Run all tests
@@ -304,6 +308,141 @@ const FileUploader = React.memo<FileUploaderProps>(
 3. **CSRF Protection**: Use proper tokens for API calls
 4. **Secrets Management**: Never expose API keys in client code
 
+## Bundle Optimization Guidelines
+
+React File Lift is optimized for minimal bundle size. Follow these guidelines to maintain our 94% size reduction:
+
+### Core Principles
+
+1. **Peer Dependencies**: Keep cloud storage providers as peer dependencies
+2. **Tree Shaking**: Ensure all code is tree-shakeable
+3. **Minimal Core**: Core functionality should be lightweight
+4. **Optional Features**: Heavy features should be optional
+
+### Bundle Size Targets
+
+- **Core Package**: < 500KB total
+- **Individual JS**: < 250KB (gzipped: < 80KB)
+- **CSS**: < 10KB (minified)
+- **TypeScript Definitions**: < 15KB
+
+### Optimization Rules
+
+#### ✅ DO
+
+```typescript
+// Use dynamic imports for heavy dependencies
+const compressImage = async (file: File) => {
+  const { default: imageCompression } = await import('browser-image-compression');
+  return imageCompression(file, options);
+};
+
+// Make cloud providers external
+export const createStorageProvider = (config: CloudStorageConfig) => {
+  switch (config.provider) {
+    case 'aws':
+      // AWS SDK is external - user installs it
+      return new AWSStorage(config.config as AWSConfig);
+    case 'cloudinary':
+      // Cloudinary is external - user installs it
+      return new CloudinaryStorage(config.config as CloudinaryConfig);
+  }
+};
+
+// Use peer dependencies in package.json
+{
+  "peerDependenciesMeta": {
+    "@aws-sdk/client-s3": { "optional": true },
+    "cloudinary": { "optional": true }
+  }
+}
+```
+
+#### ❌ DON'T
+
+```typescript
+// Don't bundle heavy dependencies
+import AWS from 'aws-sdk'; // ❌ This adds 2MB+ to bundle
+import cloudinary from 'cloudinary'; // ❌ This adds 1.5MB+ to bundle
+
+// Don't include source maps in production
+{
+  "scripts": {
+    "build": "rollup -c --sourcemap" // ❌ Adds 5MB+ source maps
+  }
+}
+
+// Don't bundle unused code
+import { everything } from 'large-library'; // ❌ Imports entire library
+```
+
+### Rollup Configuration
+
+Our optimized Rollup config includes:
+
+```javascript
+// External dependencies (not bundled)
+external: [
+  'react',
+  'react-dom',
+  '@aws-sdk/client-s3',
+  '@aws-sdk/s3-request-presigner',
+  '@supabase/supabase-js',
+  'firebase',
+  'cloudinary',
+  'browser-image-compression'
+],
+
+// Tree shaking optimization
+treeshake: {
+  moduleSideEffects: false,
+  propertyReadSideEffects: false,
+  tryCatchDeoptimization: false,
+},
+
+// No source maps in production
+sourcemap: false,
+compact: true
+```
+
+### Adding New Features
+
+When adding new features:
+
+1. **Check Bundle Impact**: Run `npm run analyze` to see bundle size
+2. **Use Peer Dependencies**: For heavy libraries, make them peer dependencies
+3. **Lazy Loading**: Use dynamic imports for optional features
+4. **Tree Shaking**: Ensure new code is tree-shakeable
+
+### Bundle Analysis
+
+```bash
+# Analyze bundle size
+npm run analyze
+
+# Check production build size
+npm run build:prod
+ls -la dist/
+
+# Compare before/after
+npm run build:dev  # With source maps
+npm run build:prod # Without source maps
+```
+
+### Performance Monitoring
+
+- **Bundle Size**: Monitor total package size
+- **Gzip Size**: Check compressed size
+- **Tree Shaking**: Verify unused code is removed
+- **Load Time**: Test actual loading performance
+
+### Common Pitfalls
+
+1. **Accidental Imports**: Don't import entire libraries
+2. **Source Maps**: Don't include in production builds
+3. **Dependencies**: Don't add heavy deps to main package
+4. **Polyfills**: Don't include polyfills unless necessary
+
 ## Testing Guidelines
 
 ### Testing Strategy
@@ -500,6 +639,9 @@ We follow [Semantic Versioning](https://semver.org/):
 - [ ] All tests pass
 - [ ] No linting errors
 - [ ] TypeScript builds without errors
+- [ ] Bundle size within limits (< 500KB total)
+- [ ] No source maps in production build
+- [ ] Peer dependencies properly configured
 - [ ] Documentation is updated
 - [ ] CHANGELOG.md is updated
 - [ ] Version number is bumped
@@ -524,7 +666,21 @@ We follow [Semantic Versioning](https://semver.org/):
    # Update CHANGELOG.md
    ```
 
-3. **Final Testing**
+3. **Bundle Size Check**
+
+   ```bash
+   # Build optimized package
+   npm run build:prod
+
+   # Check bundle size
+   ls -la dist/
+   # Should be < 500KB total
+
+   # Analyze bundle composition
+   npm run analyze
+   ```
+
+4. **Final Testing**
 
    ```bash
    npm run test:ci
@@ -532,7 +688,7 @@ We follow [Semantic Versioning](https://semver.org/):
    npm run test:integration
    ```
 
-4. **Merge and Tag**
+5. **Merge and Tag**
 
    ```bash
    git checkout main
@@ -541,13 +697,13 @@ We follow [Semantic Versioning](https://semver.org/):
    git push origin main --tags
    ```
 
-5. **Publish**
+6. **Publish**
 
    ```bash
    npm publish
    ```
 
-6. **Create GitHub Release**
+7. **Create GitHub Release**
    - Write release notes
    - Include migration guide if needed
    - Announce in community channels

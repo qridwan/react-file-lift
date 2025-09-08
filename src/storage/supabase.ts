@@ -1,13 +1,41 @@
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+/* eslint-disable no-unused-vars */
 import { SupabaseConfig } from "../types";
 
+// Dynamic imports for peer dependencies
+let createClient: any;
+let SupabaseClient: any;
+
+// Lazy load Supabase SDK
+async function loadSupabaseSDK() {
+  if (!createClient) {
+    try {
+      const supabaseModule = await import("@supabase/supabase-js");
+      createClient = supabaseModule.createClient;
+      SupabaseClient = supabaseModule.SupabaseClient;
+    } catch (error) {
+      throw new Error(
+        "Supabase SDK not found. Please install @supabase/supabase-js: npm install @supabase/supabase-js"
+      );
+    }
+  }
+}
+
 export class SupabaseStorage {
-  private supabase: SupabaseClient;
+  private supabase: any;
   private config: SupabaseConfig;
+  private sdkLoaded: boolean = false;
 
   constructor(config: SupabaseConfig) {
     this.config = config;
-    this.supabase = createClient(config.url, config.anonKey);
+    // Supabase client will be initialized lazily when first used
+  }
+
+  private async ensureSDKLoaded() {
+    if (!this.sdkLoaded) {
+      await loadSupabaseSDK();
+      this.supabase = createClient(this.config.url, this.config.anonKey);
+      this.sdkLoaded = true;
+    }
   }
 
   /**
@@ -18,6 +46,8 @@ export class SupabaseStorage {
     fileName?: string,
     onProgress?: (progress: number) => void
   ): Promise<string> {
+    await this.ensureSDKLoaded();
+
     const filePath = this.generateFilePath(fileName || file.name);
 
     try {

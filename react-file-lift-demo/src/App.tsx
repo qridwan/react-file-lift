@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileUploader, CloudStorageConfig, FileWithPreview } from 'react-file-lift';
+import { FileUploader, CloudStorageConfig, FileWithPreview, AWSConfig, CloudinaryConfig, SupabaseConfig, FirebaseConfig } from 'react-file-lift';
 import './App.css';
 
 function App() {
@@ -84,14 +84,21 @@ function App() {
 
 	const isCloudConfigured = (config: CloudStorageConfig) => {
 		switch (config.provider) {
-			case 'aws':
-				return !!(config.config.accessKeyId && config.config.secretAccessKey && config.config.bucket);
-			case 'cloudinary':
-				return !!(config.config.cloudName && config.config.apiKey);
-			case 'supabase':
-				return !!(config.config.url && config.config.anonKey && config.config.bucket);
+			case 'aws': {
+				const awsConfig = config.config as AWSConfig;
+				return !!(awsConfig.accessKeyId && awsConfig.secretAccessKey && awsConfig.bucket);
+			}
+			case 'cloudinary': {
+				const cloudinaryConfig = config.config as CloudinaryConfig;
+				return !!(cloudinaryConfig.cloudName && cloudinaryConfig.apiKey);
+			}
+			case 'supabase': {
+				const supabaseConfig = config.config as SupabaseConfig;
+				return !!(supabaseConfig.url && supabaseConfig.anonKey && supabaseConfig.bucket);
+			}
 			case 'firebase':
-				return !!(config.config.apiKey && config.config.authDomain && config.config.projectId);
+				const firebaseConfig = config.config as FirebaseConfig;
+				return !!(firebaseConfig.apiKey && firebaseConfig.authDomain && firebaseConfig.projectId);
 			default:
 				return false;
 		}

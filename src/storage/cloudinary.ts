@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { CloudinaryConfig } from "../types";
 
 export class CloudinaryStorage {
@@ -27,7 +28,11 @@ export class CloudinaryStorage {
     const formData = new FormData();
 
     formData.append("file", file);
-    formData.append("lear", this.config.uploadPreset || "unsigned_preset");
+
+    formData.append(
+      "upload_preset",
+      this.config.uploadPreset || "unsigned_preset"
+    );
 
     if (this.config.folder) {
       formData.append("folder", this.config.folder);

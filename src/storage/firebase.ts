@@ -1,34 +1,72 @@
-import { initializeApp, FirebaseApp } from "firebase/app";
-import {
-  getStorage,
-  FirebaseStorage,
-  ref,
-  uploadBytesResumable,
-  getDownloadURL,
-  UploadTaskSnapshot,
-} from "firebase/storage";
+/* eslint-disable no-unused-vars */
 import { FirebaseConfig } from "../types";
 
+// Dynamic imports for peer dependencies
+let initializeApp: any;
+let getStorage: any;
+let ref: any;
+let uploadBytesResumable: any;
+let getDownloadURL: any;
+let UploadTaskSnapshot: any;
+let FirebaseApp: any;
+let FirebaseStorage: any;
+
+// Lazy load Firebase SDK
+async function loadFirebaseSDK() {
+  if (!initializeApp) {
+    try {
+      const appModule = await import("firebase/app");
+      const storageModule = await import("firebase/storage");
+
+      initializeApp = appModule.initializeApp;
+      // @ts-ignore - Firebase types not available at build time (peer dependency)
+      FirebaseApp = appModule.FirebaseApp;
+      getStorage = storageModule.getStorage;
+
+      // @ts-ignore - Firebase types not available at build time (peer dependency)
+      FirebaseStorage = storageModule.FirebaseStorage;
+      ref = storageModule.ref;
+      uploadBytesResumable = storageModule.uploadBytesResumable;
+      getDownloadURL = storageModule.getDownloadURL;
+      // @ts-ignore - Firebase types not available at build time (peer dependency)
+      UploadTaskSnapshot = storageModule.UploadTaskSnapshot;
+    } catch (error) {
+      throw new Error(
+        "Firebase SDK not found. Please install firebase: npm install firebase"
+      );
+    }
+  }
+}
+
 export class FirebaseStorageClass {
-  private app: FirebaseApp;
-  private storage: FirebaseStorage;
+  private app: any;
+  private storage: any;
   private config: FirebaseConfig;
+  private sdkLoaded: boolean = false;
 
   constructor(config: FirebaseConfig) {
     this.config = config;
+    // Firebase app and storage will be initialized lazily when first used
+  }
 
-    // Initialize Firebase app
-    this.app = initializeApp({
-      apiKey: config.apiKey,
-      authDomain: config.authDomain,
-      projectId: config.projectId,
-      storageBucket: config.storageBucket,
-      messagingSenderId: config.messagingSenderId,
-      appId: config.appId,
-    });
+  private async ensureSDKLoaded() {
+    if (!this.sdkLoaded) {
+      await loadFirebaseSDK();
 
-    // Initialize Firebase Storage
-    this.storage = getStorage(this.app);
+      // Initialize Firebase app
+      this.app = initializeApp({
+        apiKey: this.config.apiKey,
+        authDomain: this.config.authDomain,
+        projectId: this.config.projectId,
+        storageBucket: this.config.storageBucket,
+        messagingSenderId: this.config.messagingSenderId,
+        appId: this.config.appId,
+      });
+
+      // Initialize Firebase Storage
+      this.storage = getStorage(this.app);
+      this.sdkLoaded = true;
+    }
   }
 
   /**
@@ -39,6 +77,8 @@ export class FirebaseStorageClass {
     fileName?: string,
     onProgress?: (progress: number) => void
   ): Promise<string> {
+    await this.ensureSDKLoaded();
+
     const filePath = this.generateFilePath(fileName || file.name);
     const storageRef = ref(this.storage, filePath);
 
@@ -70,13 +110,13 @@ export class FirebaseStorageClass {
 
       uploadTask.on(
         "state_changed",
-        (snapshot: UploadTaskSnapshot) => {
+        (snapshot: any) => {
           // Progress tracking
           const progress =
             (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
           onProgress(progress);
         },
-        (error) => {
+        (error: any) => {
           // Handle unsuccessful uploads
           console.error("Firebase upload error:", error);
           reject(error);
@@ -109,6 +149,8 @@ export class FirebaseStorageClass {
    * Gets the download URL for a file
    */
   async getDownloadURL(filePath: string): Promise<string> {
+    await this.ensureSDKLoaded();
+
     const fileRef = ref(this.storage, filePath);
     return await getDownloadURL(fileRef);
   }
@@ -153,14 +195,16 @@ export class FirebaseStorageClass {
   /**
    * Gets the Firebase app instance
    */
-  getApp(): FirebaseApp {
+  async getApp(): Promise<any> {
+    await this.ensureSDKLoaded();
     return this.app;
   }
 
   /**
    * Gets the Firebase Storage instance
    */
-  getStorage(): FirebaseStorage {
+  async getStorage(): Promise<any> {
+    await this.ensureSDKLoaded();
     return this.storage;
   }
 }
