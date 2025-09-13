@@ -1,63 +1,54 @@
 # React File Lift Demo
 
-This is a comprehensive demo application showcasing all the features of the React File Lift package.
+This is a comprehensive demo application showcasing the `react-file-lift` package with all its features including cloud storage integrations and image compression.
 
-## 🚀 Quick Start
+## Features Demonstrated
 
-1. **Start the demo:**
-
-   ```bash
-   npm start
-   ```
-
-   Or double-click `start-demo.bat` on Windows.
-
-2. **Open your browser** and go to: http://localhost:3000
-
-## 🎯 Features Demonstrated
-
-### Basic Features
-
-- ✅ **Drag & Drop** file upload
-- ✅ **Multiple file** selection
-- ✅ **File validation** (type, size)
-- ✅ **Progress tracking** in real-time
-- ✅ **Error handling** and user feedback
-
-### Advanced Features
-
-- ✅ **Image compression** with configurable options
-- ✅ **Cloud storage** integration:
-  - AWS S3 with presigned URLs
-  - Cloudinary with transformations
+- **Basic File Upload**: Drag-and-drop file upload with validation
+- **Image Compression**: Automatic image compression with configurable options
+- **Cloud Storage Integration**:
+  - AWS S3
+  - Cloudinary
   - Supabase Storage
   - Firebase Storage
-- ✅ **Custom styling** and theming
-- ✅ **TypeScript** support
+- **Peer Dependency Management**: Dynamic loading of optional dependencies
+- **Real-time Status**: Live status indicators for all features
 
-## 🔧 Configuration
+## Quick Start
 
-### Quick Setup
+### Option 1: Use the batch script (Windows)
 
-Run the setup script to create your environment file:
-
-**Windows (PowerShell):**
-
-```powershell
-powershell -ExecutionPolicy Bypass -File setup-env.ps1
+```bash
+install-peer-deps.bat
+npm start
 ```
 
-**Windows (Command Prompt):**
+### Option 2: Use npm scripts
 
-```cmd
-setup-env.bat
+```bash
+# Install all dependencies including peer dependencies
+npm run setup
+
+# Start the demo
+npm start
 ```
 
-This will create a `.env.local` file with all the required environment variables.
+### Option 3: Manual installation
 
-### Manual Setup
+```bash
+# Install basic dependencies
+npm install
 
-To test cloud storage features, create a `.env.local` file in this directory:
+# Install peer dependencies
+npm run install:peer-deps
+
+# Start the demo
+npm start
+```
+
+## Configuration
+
+To test cloud storage features, create a `.env` file in this directory with your credentials:
 
 ```env
 # AWS S3 Configuration
@@ -86,96 +77,38 @@ REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
 REACT_APP_FIREBASE_APP_ID=your_firebase_app_id
 ```
 
-## 📁 Project Structure
+## Dependencies
 
-```
-react-file-lift-demo/
-├── public/
-│   ├── index.html
-│   └── manifest.json
-├── src/
-│   ├── App.tsx          # Main demo component
-│   ├── App.css          # Demo styles
-│   ├── index.tsx        # React entry point
-│   └── index.css        # Global styles
-├── node_modules/
-│   └── react-file-lift/ # Local copy of the built package
-├── package.json
-├── tsconfig.json
-└── README.md
-```
+This demo uses peer dependencies that need to be installed separately:
 
-## 🎨 Customization
+- `@aws-sdk/client-s3` & `@aws-sdk/s3-request-presigner` - AWS S3 support
+- `cloudinary` - Cloudinary integration
+- `@supabase/supabase-js` - Supabase Storage support
+- `firebase` - Firebase Storage support
+- `browser-image-compression` - Image compression functionality
 
-The demo app shows how to:
+**Note**: The demo app will work without these dependencies, but cloud storage and compression features will be disabled. Install them to test all features.
 
-- Import and use React File Lift components
-- Configure different cloud storage providers
-- Handle upload events and progress
-- Style the components to match your design
-- Set up TypeScript with proper types
+## What You'll See
 
-## 🔗 Integration Examples
+1. **Peer Dependencies Status**: Real-time status of all optional dependencies
+2. **Basic Upload**: Test basic file upload functionality
+3. **Image Compression**: Upload images to see compression in action
+4. **Cloud Storage Demos**: Test each cloud provider (requires configuration)
+5. **Uploaded Files**: View all uploaded files with their status and URLs
 
-### Basic Usage
+## Troubleshooting
 
-```tsx
-import { FileUploader } from "react-file-lift";
+- If a cloud storage provider shows as "not installed", the peer dependency is missing
+- If configuration shows as "not configured", check your `.env` file
+- All features work independently - you can test basic upload without any cloud configuration
 
-<FileUploader
-  multiple
-  accept="image/*"
-  onFilesAdded={(files) => console.log("Files added:", files)}
-  onUploadComplete={(files) => console.log("Upload complete:", files)}
-/>;
-```
+## Development
 
-### With Cloud Storage
+This demo app uses Create React App and includes:
 
-```tsx
-import { FileUploader, CloudStorageConfig } from "react-file-lift";
-
-const config: CloudStorageConfig = {
-  provider: "aws",
-  config: {
-    accessKeyId: "your-key",
-    secretAccessKey: "your-secret",
-    region: "us-east-1",
-    bucket: "your-bucket",
-  },
-};
-
-<FileUploader
-  storageConfig={config}
-  multiple
-  onUploadComplete={(files) => console.log("Uploaded to cloud:", files)}
-/>;
-```
-
-### With Image Compression
-
-```tsx
-<FileUploader
-  enableCompression
-  compressionOptions={{
-    maxSizeMB: 2,
-    maxWidthOrHeight: 1920,
-    useWebWorker: true,
-  }}
-  onCompressionComplete={(original, compressed) => {
-    console.log("Compressed:", original.size, "→", compressed.size);
-  }}
-/>
-```
-
-## 🐛 Troubleshooting
-
-1. **Module not found errors**: Make sure the `react-file-lift` package is properly copied to `node_modules/`
-2. **Cloud storage not working**: Check your environment variables and credentials
-3. **TypeScript errors**: Ensure all dependencies are installed and types are available
-
-## 📚 Learn More
-
-- [React File Lift Documentation](../README.md)
-- [API Reference](../src/types/index.ts)
-- [Examples](../examples/)
+- TypeScript support
+- Modern React hooks
+- Responsive design
+- Real-time status updates
+- Error handling and user feedback

@@ -11,25 +11,42 @@ export function generateFileId(): string {
  * Creates a FileWithPreview object from a File
  */
 export function createFileWithPreview(file: File): FileWithPreview {
-  const fileWithPreview: FileWithPreview = {
-    ...file,
-    id: generateFileId(),
-    status: "pending",
-    name: file.name,
-    size: file.size,
-    type: file.type,
+  // Ensure we have a valid file type, fallback to empty string if undefined
+  const fileType = file.type || "";
+
+  // Debug logging
+  console.log("createFileWithPreview called with:", {
+    fileName: file.name,
+    originalType: file.type,
+    processedType: fileType,
+    fileSize: file.size,
     lastModified: file.lastModified,
-    webkitRelativePath: file.webkitRelativePath,
-    stream: file.stream.bind(file),
-    text: file.text.bind(file),
-    arrayBuffer: file.arrayBuffer.bind(file),
-    slice: file.slice.bind(file),
-  };
+  });
+
+  // Create a new File object with the same properties as the original
+  const fileWithPreview = new File([file], file.name, {
+    type: fileType,
+    lastModified: file.lastModified,
+  }) as FileWithPreview;
+
+  // Add our custom properties
+  fileWithPreview.id = generateFileId();
+  fileWithPreview.status = "pending";
 
   // Create preview URL for images
-  if (file.type.startsWith("image/")) {
+  if (fileType && fileType.startsWith("image/")) {
     fileWithPreview.preview = URL.createObjectURL(file);
   }
+
+  // Debug the created object
+  console.log("Created FileWithPreview:", {
+    name: fileWithPreview.name,
+    type: fileWithPreview.type,
+    size: fileWithPreview.size,
+    id: fileWithPreview.id,
+    status: fileWithPreview.status,
+    hasPreview: !!fileWithPreview.preview,
+  });
 
   return fileWithPreview;
 }
@@ -103,7 +120,24 @@ export function getFileExtension(filename: string): string {
  * Checks if file is an image
  */
 export function isImageFile(file: File): boolean {
-  return file.type.startsWith("image/");
+  console.log("isImageFile called with:", file);
+  console.log("File properties:", {
+    name: file.name,
+    type: file.type,
+    size: file.size,
+    constructor: file.constructor.name,
+    isFile: file instanceof File,
+    hasType: "type" in file,
+    typeValue: file.type,
+  });
+
+  const result = !!(file.type && file.type.startsWith("image/"));
+  console.log("isImageFile result:", {
+    fileName: file.name,
+    fileType: file.type,
+    isImage: result,
+  });
+  return result;
 }
 
 /**

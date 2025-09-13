@@ -17,7 +17,7 @@
     "dev": "rollup -c -w",
     "copy:demo": "xcopy \"dist\" \"react-file-lift-demo\\node_modules\\react-file-lift\" /E /Y",
     "build:demo": "npm run build:prod && npm run copy:demo",
-    "demo": "npm run build:demo && cd react-file-lift-demo && npm start",
+    "demo": "npm run build:demo && cd react-file-lift-demo && npm install && npm start",
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "eslint src --ext .ts,.tsx",

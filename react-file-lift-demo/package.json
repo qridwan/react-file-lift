@@ -8,9 +8,18 @@
     "@types/react-dom": "^18.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-file-lift": "^1.0.2",
     "react-scripts": "5.0.1",
     "typescript": "^4.9.0",
     "web-vitals": "^2.1.0"
+  },
+  "peerDependencies": {
+    "@aws-sdk/client-s3": "^3.879.0",
+    "@aws-sdk/s3-request-presigner": "^3.879.0",
+    "@supabase/supabase-js": "^2.57.0",
+    "browser-image-compression": "^2.0.2",
+    "cloudinary": "^1.41.3",
+    "firebase": "^10.14.1"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -18,7 +27,9 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "copy:package": "xcopy \"..\\dist\" \"node_modules\\react-file-lift\" /E /Y",
-    "update:package": "cd .. && npm run build && cd react-file-lift-demo && npm run copy:package"
+    "update:package": "cd .. && npm run build && cd react-file-lift-demo && npm run copy:package",
+    "install:peer-deps": "bun install @aws-sdk/client-s3 @aws-sdk/s3-request-presigner @supabase/supabase-js cloudinary firebase browser-image-compression",
+    "setup": "bun install && bun run install:peer-deps"
   },
   "eslintConfig": {
     "extends": [

@@ -1,10 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileUploader, CloudStorageConfig, FileWithPreview, AWSConfig, CloudinaryConfig, SupabaseConfig, FirebaseConfig } from 'react-file-lift';
 import './App.css';
 
 function App() {
 	const [uploadedFiles, setUploadedFiles] = useState<FileWithPreview[]>([]);
 	const [isUploading, setIsUploading] = useState(false);
+	const [peerDependencies, setPeerDependencies] = useState({
+		aws: false,
+		cloudinary: false,
+		supabase: false,
+		firebase: false,
+		compression: false,
+	});
+
+	// For demo purposes, we'll assume all peer dependencies are available
+	// The actual checking is handled by the react-file-lift package internally
+	useEffect(() => {
+		// Set all dependencies as available for demo purposes
+		// In a real app, you would check if the dependencies are actually installed
+		setPeerDependencies({
+			aws: true,
+			cloudinary: true,
+			supabase: true,
+			firebase: true,
+			compression: true,
+		});
+	}, []);
 
 	// AWS S3 Configuration
 	const awsConfig: CloudStorageConfig = {
@@ -29,6 +50,9 @@ function App() {
 			folder: 'react-file-lift-demo/',
 		},
 	};
+
+	// Debug Cloudinary configuration
+	console.log('Cloudinary config:', cloudinaryConfig);
 
 	// Supabase Configuration
 	const supabaseConfig: CloudStorageConfig = {
@@ -83,6 +107,13 @@ function App() {
 	};
 
 	const isCloudConfigured = (config: CloudStorageConfig) => {
+		// First check if the peer dependency is available
+		const hasPeerDep = peerDependencies[config.provider as keyof typeof peerDependencies];
+		if (!hasPeerDep) {
+			return false;
+		}
+
+		// Then check if the configuration is complete
 		switch (config.provider) {
 			case 'aws': {
 				const awsConfig = config.config as AWSConfig;
@@ -96,13 +127,16 @@ function App() {
 				const supabaseConfig = config.config as SupabaseConfig;
 				return !!(supabaseConfig.url && supabaseConfig.anonKey && supabaseConfig.bucket);
 			}
-			case 'firebase':
+			case 'firebase': {
 				const firebaseConfig = config.config as FirebaseConfig;
 				return !!(firebaseConfig.apiKey && firebaseConfig.authDomain && firebaseConfig.projectId);
+			}
 			default:
 				return false;
 		}
 	};
+
+	console.log('uploadedFiles', uploadedFiles);
 
 	return (
 		<div className="App">
@@ -112,6 +146,32 @@ function App() {
 			</header>
 
 			<main className="App-main">
+				{/* Peer Dependencies Status */}
+				<section className="demo-section">
+					<h2>📦 Peer Dependencies Status</h2>
+					<p>This demo assumes all peer dependencies are available. Install them to test cloud storage features:</p>
+					<div className="peer-deps-status">
+						<div className={`dep-status ${peerDependencies.aws ? 'success' : 'warning'}`}>
+							{peerDependencies.aws ? '✅' : '⚠️'} AWS SDK
+						</div>
+						<div className={`dep-status ${peerDependencies.cloudinary ? 'success' : 'warning'}`}>
+							{peerDependencies.cloudinary ? '✅' : '⚠️'} Cloudinary
+						</div>
+						<div className={`dep-status ${peerDependencies.supabase ? 'success' : 'warning'}`}>
+							{peerDependencies.supabase ? '✅' : '⚠️'} Supabase
+						</div>
+						<div className={`dep-status ${peerDependencies.firebase ? 'success' : 'warning'}`}>
+							{peerDependencies.firebase ? '✅' : '⚠️'} Firebase
+						</div>
+						<div className={`dep-status ${peerDependencies.compression ? 'success' : 'warning'}`}>
+							{peerDependencies.compression ? '✅' : '⚠️'} Image Compression
+						</div>
+					</div>
+					<div className="config-status warning">
+						<strong>Note:</strong> Run <code>npm run install:peer-deps</code> to install all peer dependencies for full functionality.
+					</div>
+				</section>
+
 				{/* Basic Upload Demo */}
 				<section className="demo-section">
 					<h2>📁 Basic File Upload</h2>
@@ -131,13 +191,19 @@ function App() {
 				{/* Image Compression Demo */}
 				<section className="demo-section">
 					<h2>🖼️ Image Compression Demo</h2>
+					<div className={`config-status ${peerDependencies.compression ? 'success' : 'warning'}`}>
+						{peerDependencies.compression
+							? '✅ Image compression enabled'
+							: '⚠️ Image compression requires: npm install browser-image-compression'
+						}
+					</div>
 					<p>Upload images to see automatic compression with configurable options.</p>
 					<FileUploader
 						multiple
 						accept="image/*"
 						maxFiles={8}
 						maxSize={20 * 1024 * 1024} // 20MB
-						enableCompression
+						enableCompression={peerDependencies.compression}
 						compressionOptions={{
 							maxSizeMB: 2,
 							maxWidthOrHeight: 1920,
@@ -148,6 +214,7 @@ function App() {
 						onCompressionComplete={handleCompressionComplete}
 						onUploadComplete={handleUploadComplete}
 						onUploadError={handleUploadError}
+						disabled={!peerDependencies.compression}
 						className="compression-uploader"
 					/>
 				</section>
@@ -158,7 +225,7 @@ function App() {
 					<div className={`config-status ${isCloudConfigured(awsConfig) ? 'success' : 'warning'}`}>
 						{isCloudConfigured(awsConfig)
 							? '✅ AWS S3 credentials configured'
-							: '⚠️ AWS S3 requires configuration. Set REACT_APP_AWS_ACCESS_KEY_ID, REACT_APP_AWS_SECRET_ACCESS_KEY, and REACT_APP_AWS_BUCKET environment variables.'
+							: '⚠️ AWS S3 requires configuration. Set REACT_APP_AWS_ACCESS_KEY_ID, REACT_APP_AWS_SECRET_ACCESS_KEY, and REACT_APP_AWS_BUCKET environment variables. Also install: npm install @aws-sdk/client-s3 @aws-sdk/s3-request-presigner'
 						}
 					</div>
 					<FileUploader
@@ -181,7 +248,7 @@ function App() {
 					<div className={`config-status ${isCloudConfigured(cloudinaryConfig) ? 'success' : 'warning'}`}>
 						{isCloudConfigured(cloudinaryConfig)
 							? '✅ Cloudinary credentials configured'
-							: '⚠️ Cloudinary requires configuration. Set REACT_APP_CLOUDINARY_CLOUD_NAME and REACT_APP_CLOUDINARY_API_KEY environment variables.'
+							: '⚠️ Cloudinary requires configuration. Set REACT_APP_CLOUDINARY_CLOUD_NAME and REACT_APP_CLOUDINARY_API_KEY environment variables. Also install: npm install cloudinary'
 						}
 					</div>
 					<FileUploader
@@ -204,7 +271,7 @@ function App() {
 					<div className={`config-status ${isCloudConfigured(supabaseConfig) ? 'success' : 'warning'}`}>
 						{isCloudConfigured(supabaseConfig)
 							? '✅ Supabase credentials configured'
-							: '⚠️ Supabase requires configuration. Set REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_ANON_KEY, and REACT_APP_SUPABASE_BUCKET environment variables.'
+							: '⚠️ Supabase requires configuration. Set REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_ANON_KEY, and REACT_APP_SUPABASE_BUCKET environment variables. Also install: npm install @supabase/supabase-js'
 						}
 					</div>
 					<FileUploader
@@ -227,7 +294,7 @@ function App() {
 					<div className={`config-status ${isCloudConfigured(firebaseConfig) ? 'success' : 'warning'}`}>
 						{isCloudConfigured(firebaseConfig)
 							? '✅ Firebase credentials configured'
-							: '⚠️ Firebase requires configuration. Set REACT_APP_FIREBASE_API_KEY, REACT_APP_FIREBASE_AUTH_DOMAIN, and REACT_APP_FIREBASE_PROJECT_ID environment variables.'
+							: '⚠️ Firebase requires configuration. Set REACT_APP_FIREBASE_API_KEY, REACT_APP_FIREBASE_AUTH_DOMAIN, and REACT_APP_FIREBASE_PROJECT_ID environment variables. Also install: npm install firebase'
 						}
 					</div>
 					<FileUploader
@@ -282,7 +349,7 @@ function App() {
 				{/* Configuration Instructions */}
 				<section className="demo-section instructions">
 					<h2>🔧 Configuration Instructions</h2>
-					<p>To test cloud storage features, create a <code>.env</code> file in the demo directory with your credentials:</p>
+					<p>This demo app includes all required peer dependencies. To test cloud storage features, create a <code>.env</code> file in the demo directory with your credentials:</p>
 					<pre className="env-example">
 						{`# AWS S3 Configuration
 REACT_APP_AWS_ACCESS_KEY_ID=your_aws_access_key_id

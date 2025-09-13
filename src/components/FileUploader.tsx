@@ -90,16 +90,35 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 
 	const processFiles = useCallback(async (filesToProcess: FileWithPreview[]) => {
 		setIsUploading(true);
+		const successfulFiles: FileWithPreview[] = [];
 
 		for (const file of filesToProcess) {
 			try {
 				// Update file status
 				updateFileStatus(file.id, 'uploading', 0);
 
-				let fileToUpload = file as File;
+				console.log('Processing file:', file.name, {
+					fileType: typeof file,
+					isFile: file instanceof File,
+					constructor: file.constructor.name,
+					fileObject: file
+				});
+
+				// Get the actual File object - either the original file or compressed file
+				let fileToUpload: File;
+
+				// Check if we have a compressed file already
+				if (file.compressedFile) {
+					fileToUpload = file.compressedFile;
+					console.log('Using existing compressed file');
+				} else {
+					// Use the original file - we need to get it from the FileWithPreview
+					// Since FileWithPreview extends File, we can use it directly
+					fileToUpload = file;
+				}
 
 				// Compress if enabled and applicable
-				if (enableCompression && shouldCompressFile(file, compressionOptions.maxSizeMB)) {
+				if (enableCompression && shouldCompressFile(file, compressionOptions.maxSizeMB) && !file.compressedFile) {
 					updateFileStatus(file.id, 'compressed');
 
 					const compressedFile = await compressImage(file, compressionOptions);
@@ -108,7 +127,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 					setFiles(prevFiles =>
 						prevFiles.map(f =>
 							f.id === file.id
-								? { ...f, compressedFile, status: 'uploading' as const }
+								? Object.assign(f, { compressedFile, status: 'uploading' as const })
 								: f
 						)
 					);
@@ -120,9 +139,22 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 				// Upload file
 				let uploadedUrl: string;
 
+				console.log('Starting upload for file:', fileToUpload.name, {
+					fileType: typeof fileToUpload,
+					fileSize: fileToUpload.size,
+					hasCustomHandler: !!customUploadHandler,
+					hasStorageConfig: !!storageConfig,
+					storageProvider: storageConfig?.provider,
+					isFile: fileToUpload instanceof File,
+					constructor: fileToUpload.constructor.name,
+					fileObject: fileToUpload
+				});
+
 				if (customUploadHandler) {
+					console.log('Using custom upload handler');
 					uploadedUrl = await customUploadHandler(fileToUpload);
 				} else if (storageConfig) {
+					console.log('Using storage config:', storageConfig.provider);
 					const storageProvider = createStorageProvider(storageConfig);
 					uploadedUrl = await uploadFile(
 						storageProvider,
@@ -134,17 +166,43 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 					throw new Error('No upload handler or storage config provided');
 				}
 
+				console.log('Upload successful for file:', fileToUpload.name, 'URL:', uploadedUrl);
+
 				// Update file with success status and URL
+				// Create a new FileWithPreview that preserves File properties
+				const updatedFile = Object.assign(file, {
+					status: 'success' as const,
+					uploadedUrl,
+					progress: 100
+				});
+				successfulFiles.push(updatedFile);
+
+				console.log('Updating file after successful upload:', {
+					fileName: file.name,
+					uploadedUrl,
+					hasPreview: !!file.preview,
+					updatedFile: updatedFile,
+					updatedFileType: updatedFile.type,
+					updatedFileName: updatedFile.name
+				});
+
 				setFiles(prevFiles =>
 					prevFiles.map(f =>
 						f.id === file.id
-							? { ...f, status: 'success' as const, uploadedUrl, progress: 100 }
+							? updatedFile
 							: f
 					)
 				);
 
 			} catch (error) {
-				console.error('File processing error:', error);
+				console.error('File processing error for file:', file.name, error);
+				console.error('Error details:', {
+					error: error,
+					errorType: typeof error,
+					errorMessage: error instanceof Error ? error.message : String(error),
+					errorStack: error instanceof Error ? error.stack : undefined
+				});
+
 				const errorMessage = error instanceof Error ? error.message : 'Upload failed';
 
 				updateFileStatus(file.id, 'error', undefined, errorMessage);
@@ -154,12 +212,12 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 
 		setIsUploading(false);
 
-		// Notify completion
-		const successfulFiles = files.filter(f => f.status === 'success');
+
+		// Notify completion with successful files
 		if (successfulFiles.length > 0) {
 			onUploadComplete?.(successfulFiles);
 		}
-	}, [enableCompression, compressionOptions, storageConfig, customUploadHandler, onCompressionComplete, onUploadError, onUploadComplete, files]);
+	}, [enableCompression, compressionOptions, storageConfig, customUploadHandler, onCompressionComplete, onUploadError, onUploadComplete]);
 
 	const updateFileStatus = useCallback((
 		fileId: string,
@@ -170,7 +228,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 		setFiles(prevFiles => {
 			const updatedFiles = prevFiles.map(file =>
 				file.id === fileId
-					? { ...file, status, progress, error }
+					? Object.assign(file, { status, progress, error })
 					: file
 			);
 

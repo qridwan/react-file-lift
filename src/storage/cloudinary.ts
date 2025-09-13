@@ -16,32 +16,77 @@ export class CloudinaryStorage {
     fileName?: string,
     onProgress?: (progress: number) => void
   ): Promise<string> {
+    // Validate file parameter
+    if (!file || !(file instanceof File)) {
+      throw new Error("Invalid file parameter - must be a File object");
+    }
+
+    console.log("Cloudinary uploadFile called with:", {
+      file: file,
+      fileName: fileName,
+      fileType: typeof file,
+      fileConstructor: file.constructor.name,
+      fileSize: file.size,
+      file_Name: file.name,
+    });
+
     // Validate required configuration
-    if (!this.config.cloudName) {
-      throw new Error("Cloudinary cloud name is required");
+    if (!this.config.cloudName || this.config.cloudName.trim() === "") {
+      throw new Error("Cloudinary cloud name is required and cannot be empty");
     }
 
     if (!this.config.uploadPreset && !this.config.apiKey) {
       throw new Error("Cloudinary upload preset or API key is required");
     }
 
+    // Additional validation for cloud name format
+    if (!/^[a-zA-Z0-9_-]+$/.test(this.config.cloudName)) {
+      throw new Error("Cloudinary cloud name contains invalid characters");
+    }
+
     const formData = new FormData();
 
     formData.append("file", file);
 
-    formData.append(
-      "upload_preset",
-      this.config.uploadPreset || "unsigned_preset"
+    const uploadPreset = String(this.config.uploadPreset || "unsigned_preset");
+    console.log(
+      "Cloudinary upload preset:",
+      uploadPreset,
+      "type:",
+      typeof uploadPreset
     );
+    formData.append("upload_preset", uploadPreset);
 
     if (this.config.folder) {
-      formData.append("folder", this.config.folder);
+      const folder = String(this.config.folder);
+      console.log("Cloudinary folder:", folder, "type:", typeof folder);
+      formData.append("folder", folder);
     }
 
     if (fileName) {
       // Remove file extension and any special characters for public_id
-      const publicId = fileName.split(".")[0].replace(/[^a-zA-Z0-9_-]/g, "_");
+      const publicId = String(fileName)
+        .split(".")[0]
+        .replace(/[^a-zA-Z0-9_-]/g, "_");
+      console.log(
+        "Setting Cloudinary public_id:",
+        publicId,
+        "type:",
+        typeof publicId
+      );
       formData.append("public_id", publicId);
+    }
+
+    console.log(
+      "Cloudinary upload URL:",
+      `https://api.cloudinary.com/v1_1/${this.config.cloudName}/upload`
+    );
+    console.log("Cloudinary cloud name:", this.config.cloudName);
+
+    // Debug FormData contents
+    console.log("FormData entries:");
+    for (const [key, value] of formData.entries()) {
+      console.log(`${key}:`, value);
     }
 
     try {
@@ -54,7 +99,9 @@ export class CloudinaryStorage {
       return response.secure_url;
     } catch (error) {
       console.error("Cloudinary upload error:", error);
-      throw new Error(`Failed to upload to Cloudinary: ${error}`);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to upload to Cloudinary: ${errorMessage}`);
     }
   }
 
@@ -80,29 +127,39 @@ export class CloudinaryStorage {
       }
 
       xhr.addEventListener("load", () => {
+        console.log("Cloudinary upload response status:", xhr.status);
+        console.log("Cloudinary upload response text:", xhr.responseText);
+
         if (xhr.status === 200) {
           try {
             const response = JSON.parse(xhr.responseText);
+            console.log("Cloudinary upload response parsed:", response);
 
             // Check for Cloudinary error in response
             if (response.error) {
-              reject(
-                new Error(
-                  `Cloudinary error: ${
-                    response.error.message || response.error
-                  }`
-                )
-              );
+              const errorMsg = response.error.message || response.error;
+              console.error("Cloudinary API error:", errorMsg);
+              reject(new Error(`Cloudinary error: ${errorMsg}`));
+              return;
+            }
+
+            if (!response.secure_url) {
+              console.error("No secure_url in Cloudinary response:", response);
+              reject(new Error("No secure_url in Cloudinary response"));
               return;
             }
 
             resolve(response);
           } catch (error) {
-            reject(new Error(`Failed to parse response: ${error}`));
+            const errorMessage =
+              error instanceof Error ? error.message : String(error);
+            console.error("Failed to parse Cloudinary response:", errorMessage);
+            reject(new Error(`Failed to parse response: ${errorMessage}`));
           }
         } else {
           try {
             const errorResponse = JSON.parse(xhr.responseText);
+            console.error("Cloudinary upload failed:", errorResponse);
             reject(
               new Error(
                 `Upload failed: ${
@@ -111,6 +168,7 @@ export class CloudinaryStorage {
               )
             );
           } catch {
+            console.error("Cloudinary upload failed with status:", xhr.status);
             reject(new Error(`Upload failed with status: ${xhr.status}`));
           }
         }

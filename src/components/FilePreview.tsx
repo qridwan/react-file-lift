@@ -58,9 +58,9 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
 			<div className="rfl-file-preview__content">
 				{/* File Thumbnail */}
 				<div className="rfl-file-preview__thumbnail">
-					{isImageFile(file) && file.preview ? (
+					{isImageFile(file) && (file.preview || file.uploadedUrl) ? (
 						<img
-							src={file.preview}
+							src={file.uploadedUrl || file.preview}
 							alt={file.name}
 							className="rfl-file-preview__image"
 						/>
