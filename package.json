@@ -1,6 +1,6 @@
 {
   "name": "react-file-lift",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A powerful React file uploader with drag-and-drop, image compression, and cloud storage integration (S3, Cloudinary, Supabase, Firebase)",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
