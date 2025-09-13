@@ -7,6 +7,12 @@ A powerful, modern React file uploader component with drag-and-drop, image compr
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+## 🎯 Live Demo
+
+**Try it out:** [react-file-lift-demo.vercel.app](https://react-file-lift-demo.vercel.app)
+
+Experience all the features in action with our interactive demo showcasing manual upload mode, cloud storage integration, and responsive design.
+
 ## Features ✨
 
 - **🎯 Drag & Drop**: Intuitive drag-and-drop interface
