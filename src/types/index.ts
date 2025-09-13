@@ -106,9 +106,18 @@ export interface DropzoneProps {
 }
 
 export interface FilePreviewProps {
+  /** The file object to display */
   file: FileWithPreview;
+  /** Callback function called when the file is removed */
   onRemove: (fileId: string) => void;
+  /** Optional callback function called when retry is requested */
   onRetry?: (fileId: string) => void;
+  /** Additional CSS class name for the component */
   className?: string;
+  /** Whether to show the progress bar during upload */
   showProgress?: boolean;
+  /** Optional callback for when the preview image loads */
+  onImageLoad?: (file: FileWithPreview) => void;
+  /** Optional callback for when the preview image fails to load */
+  onImageError?: (file: FileWithPreview, error: Error) => void;
 }
