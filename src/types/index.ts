@@ -76,6 +76,10 @@ export interface FileUploaderProps {
   previewClassName?: string;
   disabled?: boolean;
 
+  // Upload behavior
+  autoUpload?: boolean; // Whether to auto-upload files when added (default: true)
+  showUploadButton?: boolean; // Whether to show upload button (default: false when autoUpload is true)
+
   // Compression
   enableCompression?: boolean;
   compressionOptions?: CompressionOptions;
@@ -86,10 +90,12 @@ export interface FileUploaderProps {
   // Callbacks
   onFilesAdded?: (files: FileWithPreview[]) => void;
   onFilesRemoved?: (files: FileWithPreview[]) => void;
+  onRemove?: (fileId: string) => void; // Individual file removal callback
   onUploadProgress?: (progress: UploadProgress[]) => void;
   onUploadComplete?: (files: FileWithPreview[]) => void;
   onUploadError?: (error: string, file: FileWithPreview) => void;
   onCompressionComplete?: (originalFile: File, compressedFile: File) => void;
+  onDeleteError?: (file: FileWithPreview, error: Error) => void;
 
   // Custom upload handler
   customUploadHandler?: (file: File) => Promise<string>;
@@ -112,12 +118,20 @@ export interface FilePreviewProps {
   onRemove: (fileId: string) => void;
   /** Optional callback function called when retry is requested */
   onRetry?: (fileId: string) => void;
+  /** Optional callback function called when upload is requested for pending files */
+  onUpload?: (fileId: string) => void;
   /** Additional CSS class name for the component */
   className?: string;
   /** Whether to show the progress bar during upload */
   showProgress?: boolean;
+  /** Whether to show upload button for pending files */
+  showUploadButton?: boolean;
   /** Optional callback for when the preview image loads */
   onImageLoad?: (file: FileWithPreview) => void;
   /** Optional callback for when the preview image fails to load */
   onImageError?: (file: FileWithPreview, error: Error) => void;
+  /** Optional storage provider for cloud file deletion */
+  storageProvider?: any; // Using any to avoid circular dependency
+  /** Optional callback for when cloud file deletion fails */
+  onDeleteError?: (file: FileWithPreview, error: Error) => void;
 }

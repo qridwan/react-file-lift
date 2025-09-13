@@ -19,6 +19,8 @@ A powerful, modern React file uploader component with drag-and-drop, image compr
 - **⚡ TypeScript**: Full TypeScript support
 - **🔒 Validation**: File type and size validation
 - **🖼️ Preview**: Image previews with thumbnails
+- **👤 User Control**: Preview files before uploading with manual upload control
+- **🗑️ File Management**: Remove files before or after upload
 - **📦 Optimized**: Ultra-lightweight bundle (~500KB total)
 
 ## Installation 📦
@@ -67,7 +69,7 @@ React File Lift is optimized for performance with a minimal bundle size:
 
 ## Quick Start 🚀
 
-### Basic Usage
+### Basic Usage (Auto Upload)
 
 ```tsx
 import React from "react";
@@ -86,6 +88,36 @@ function App() {
   );
 }
 ```
+
+### Manual Upload Mode (Preview Before Upload)
+
+```tsx
+import React from "react";
+import { FileUploader } from "react-file-lift";
+
+function App() {
+  return (
+    <FileUploader
+      autoUpload={false} // Disable automatic upload
+      showUploadButton={true} // Show upload buttons
+      multiple
+      accept="image/*"
+      maxFiles={5}
+      maxSize={5 * 1024 * 1024} // 5MB
+      onFilesAdded={(files) => console.log("Files added:", files)}
+      onUploadComplete={(files) => console.log("Upload complete:", files)}
+    />
+  );
+}
+```
+
+**Key Features:**
+
+- Files are added with `pending` status
+- Users can preview files before uploading
+- Individual upload buttons for each file
+- Global "Upload All" button for batch uploads
+- Remove files before or after upload
 
 ### With AWS S3
 
@@ -274,31 +306,34 @@ function App() {
 
 ### FileUploader Props
 
-| Prop                  | Type                              | Default     | Description                                         |
-| --------------------- | --------------------------------- | ----------- | --------------------------------------------------- |
-| `multiple`            | `boolean`                         | `true`      | Allow multiple file selection                       |
-| `accept`              | `string`                          | `undefined` | Accepted file types (e.g., "image/\*", ".pdf,.doc") |
-| `maxFiles`            | `number`                          | `undefined` | Maximum number of files                             |
-| `maxSize`             | `number`                          | `undefined` | Maximum file size in bytes                          |
-| `disabled`            | `boolean`                         | `false`     | Disable the uploader                                |
-| `enableCompression`   | `boolean`                         | `true`      | Enable image compression                            |
-| `compressionOptions`  | `CompressionOptions`              | `{}`        | Image compression settings                          |
-| `storageConfig`       | `CloudStorageConfig`              | `undefined` | Cloud storage configuration                         |
-| `customUploadHandler` | `(file: File) => Promise<string>` | `undefined` | Custom upload function                              |
-| `className`           | `string`                          | `''`        | CSS class for the container                         |
-| `dropzoneClassName`   | `string`                          | `''`        | CSS class for the dropzone                          |
-| `previewClassName`    | `string`                          | `''`        | CSS class for file previews                         |
+| Prop                  | Type                              | Default     | Description                                           |
+| --------------------- | --------------------------------- | ----------- | ----------------------------------------------------- |
+| `multiple`            | `boolean`                         | `true`      | Allow multiple file selection                         |
+| `accept`              | `string`                          | `undefined` | Accepted file types (e.g., "image/\*", ".pdf,.doc")   |
+| `maxFiles`            | `number`                          | `undefined` | Maximum number of files                               |
+| `maxSize`             | `number`                          | `undefined` | Maximum file size in bytes                            |
+| `disabled`            | `boolean`                         | `false`     | Disable the uploader                                  |
+| `autoUpload`          | `boolean`                         | `true`      | Automatically upload files when added                 |
+| `showUploadButton`    | `boolean`                         | `false`     | Show upload button (auto-shown when autoUpload=false) |
+| `enableCompression`   | `boolean`                         | `true`      | Enable image compression                              |
+| `compressionOptions`  | `CompressionOptions`              | `{}`        | Image compression settings                            |
+| `storageConfig`       | `CloudStorageConfig`              | `undefined` | Cloud storage configuration                           |
+| `customUploadHandler` | `(file: File) => Promise<string>` | `undefined` | Custom upload function                                |
+| `className`           | `string`                          | `''`        | CSS class for the container                           |
+| `dropzoneClassName`   | `string`                          | `''`        | CSS class for the dropzone                            |
+| `previewClassName`    | `string`                          | `''`        | CSS class for file previews                           |
 
 ### Event Handlers
 
-| Handler                 | Type                                             | Description                   |
-| ----------------------- | ------------------------------------------------ | ----------------------------- |
-| `onFilesAdded`          | `(files: FileWithPreview[]) => void`             | Called when files are added   |
-| `onFilesRemoved`        | `(files: FileWithPreview[]) => void`             | Called when files are removed |
-| `onUploadProgress`      | `(progress: UploadProgress[]) => void`           | Called during upload progress |
-| `onUploadComplete`      | `(files: FileWithPreview[]) => void`             | Called when uploads complete  |
-| `onUploadError`         | `(error: string, file: FileWithPreview) => void` | Called on upload errors       |
-| `onCompressionComplete` | `(original: File, compressed: File) => void`     | Called after compression      |
+| Handler                 | Type                                             | Description                            |
+| ----------------------- | ------------------------------------------------ | -------------------------------------- |
+| `onFilesAdded`          | `(files: FileWithPreview[]) => void`             | Called when files are added            |
+| `onFilesRemoved`        | `(files: FileWithPreview[]) => void`             | Called when files are removed          |
+| `onRemove`              | `(fileId: string) => void`                       | Called when individual file is removed |
+| `onUploadProgress`      | `(progress: UploadProgress[]) => void`           | Called during upload progress          |
+| `onUploadComplete`      | `(files: FileWithPreview[]) => void`             | Called when uploads complete           |
+| `onUploadError`         | `(error: string, file: FileWithPreview) => void` | Called on upload errors                |
+| `onCompressionComplete` | `(original: File, compressed: File) => void`     | Called after compression               |
 
 ## Individual Components 🧩
 
@@ -321,8 +356,82 @@ import { FilePreview } from "react-file-lift";
   file={file}
   onRemove={(id) => console.log("Remove:", id)}
   onRetry={(id) => console.log("Retry:", id)}
+  onUpload={(id) => console.log("Upload:", id)}
   showProgress
+  showUploadButton={true}
 />;
+```
+
+**FilePreview Props:**
+
+- `file`: The file object to display
+- `onRemove`: Callback when file is removed
+- `onRetry`: Callback when retry is requested
+- `onUpload`: Callback when upload is requested (for pending files)
+- `showProgress`: Whether to show progress bar
+- `showUploadButton`: Whether to show upload button for pending files
+- `storageProvider`: Storage provider for cloud file deletion
+- `onDeleteError`: Callback when cloud file deletion fails
+
+## Upload Modes & File States 📊
+
+### Upload Modes
+
+**Auto Upload Mode (Default)**
+
+- Files are uploaded immediately when added
+- No upload buttons shown
+- Best for simple use cases
+
+**Manual Upload Mode**
+
+- Files are added with `pending` status
+- Users can preview and remove files before uploading
+- Upload buttons available for individual or batch uploads
+- Best for complex workflows where user control is needed
+
+### File States
+
+| State        | Description                      | Actions Available                  |
+| ------------ | -------------------------------- | ---------------------------------- |
+| `pending`    | File added but not uploaded yet  | Upload, Remove                     |
+| `uploading`  | File is currently being uploaded | Cancel (via Remove)                |
+| `success`    | File uploaded successfully       | View, Remove (with cloud deletion) |
+| `error`      | Upload failed                    | Retry, Remove                      |
+| `compressed` | File is being compressed         | None (automatic)                   |
+
+### Example: Manual Upload Workflow
+
+```tsx
+function MyUploader() {
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [removedFileIds, setRemovedFileIds] = useState([]);
+
+  return (
+    <FileUploader
+      autoUpload={false}
+      showUploadButton={true}
+      storageConfig={cloudinaryConfig}
+      onFilesAdded={(files) => {
+        console.log("Files added for preview:", files);
+        // Files are in 'pending' state
+      }}
+      onUploadComplete={(files) => {
+        console.log("Upload complete:", files);
+        setUploadedFiles(files);
+      }}
+      onFilesRemoved={(files) => {
+        console.log("Files removed:", files);
+      }}
+      onRemove={(fileId) => {
+        console.log("Individual file removed:", fileId);
+        setRemovedFileIds((prev) => [...prev, fileId]);
+        // You can perform custom logic here
+        // e.g., update your own state, make API calls, etc.
+      }}
+    />
+  );
+}
 ```
 
 ## Styling 🎨
@@ -445,6 +554,54 @@ React File Lift uses peer dependencies to keep the bundle size minimal. You only
 - ✅ Better tree shaking
 - ✅ Faster installs and builds
 
+## Cloud File Deletion 🗑️
+
+React File Lift supports automatic cloud file deletion when files are removed from the UI:
+
+### Supported Providers
+
+| Provider   | Deletion Support | Notes                               |
+| ---------- | ---------------- | ----------------------------------- |
+| AWS S3     | ✅ Full Support  | Files deleted from S3 bucket        |
+| Supabase   | ✅ Full Support  | Files deleted from Supabase Storage |
+| Firebase   | ✅ Full Support  | Files deleted from Firebase Storage |
+| Cloudinary | ⚠️ Limited       | Requires server-side implementation |
+
+### Cloudinary Deletion
+
+Cloudinary requires server-side deletion for security reasons. The component will:
+
+- Remove files from the UI immediately
+- Log warnings about server-side deletion requirement
+- Provide guidance for implementing proper deletion
+
+**Server-side Implementation Example:**
+
+```javascript
+// Backend endpoint for Cloudinary deletion
+app.delete("/api/files/:publicId", async (req, res) => {
+  try {
+    const { publicId } = req.params;
+    await cloudinary.uploader.destroy(publicId);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+```
+
+### Error Handling
+
+```tsx
+<FileUploader
+  storageConfig={cloudinaryConfig}
+  onDeleteError={(file, error) => {
+    console.error("Cloud deletion failed:", error);
+    // Handle deletion errors gracefully
+  }}
+/>
+```
+
 ## Utilities 🛠️
 
 The package also exports useful utility functions:
@@ -493,6 +650,7 @@ import type {
 Check out the `examples` directory for more comprehensive examples:
 
 - [Basic Usage](./examples/basic.tsx)
+- [Manual Upload Mode](./examples/manual-upload.tsx) - Preview files before uploading
 - [AWS S3 Integration](./examples/aws-s3.tsx)
 - [Cloudinary Integration](./examples/cloudinary.tsx)
 - [Supabase Integration](./examples/supabase.tsx)

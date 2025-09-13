@@ -49,6 +49,43 @@ export async function uploadFile(
   return await storageProvider.uploadFile(file, fileName, onProgress);
 }
 
+/**
+ * Generic delete function that works with any storage provider
+ */
+export async function deleteFile(
+  storageProvider: StorageProvider,
+  fileUrl: string
+): Promise<void> {
+  // Extract the appropriate identifier based on storage provider type
+  if ("extractPublicId" in storageProvider) {
+    // Cloudinary
+    const publicId = (storageProvider as any).extractPublicId(fileUrl);
+    if (publicId) {
+      await (storageProvider as any).deleteFile(publicId);
+    } else {
+      throw new Error("Invalid Cloudinary URL");
+    }
+  } else if ("extractKey" in storageProvider) {
+    // AWS S3
+    const key = (storageProvider as any).extractKey(fileUrl);
+    if (key) {
+      await (storageProvider as any).deleteFile(key);
+    } else {
+      throw new Error("Invalid S3 URL");
+    }
+  } else if ("extractFilePath" in storageProvider) {
+    // Supabase or Firebase
+    const filePath = (storageProvider as any).extractFilePath(fileUrl);
+    if (filePath) {
+      await (storageProvider as any).deleteFile(filePath);
+    } else {
+      throw new Error("Invalid storage URL");
+    }
+  } else {
+    throw new Error("Unsupported storage provider for deletion");
+  }
+}
+
 export { AWSStorage } from "./aws";
 export { CloudinaryStorage } from "./cloudinary";
 export { SupabaseStorage } from "./supabase";

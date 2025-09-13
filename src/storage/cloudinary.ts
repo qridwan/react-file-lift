@@ -83,12 +83,6 @@ export class CloudinaryStorage {
     );
     console.log("Cloudinary cloud name:", this.config.cloudName);
 
-    // Debug FormData contents
-    console.log("FormData entries:");
-    for (const [key, value] of formData.entries()) {
-      console.log(`${key}:`, value);
-    }
-
     try {
       const response = await this.uploadWithProgress(formData, onProgress);
 
@@ -243,5 +237,45 @@ export class CloudinaryStorage {
     // Note: In production, generate signature on your backend
     // This is just for demonstration purposes
     return `https://api.cloudinary.com/v1_1/${this.config.cloudName}/upload`;
+  }
+
+  /**
+   * Deletes a file from Cloudinary
+   * Note: This requires server-side implementation for security
+   */
+  async deleteFile(publicId: string): Promise<void> {
+    // Cloudinary requires server-side deletion for security
+    // Client-side deletion is not supported due to signature requirements
+
+    console.warn(
+      `Cloudinary file deletion not supported from client-side. ` +
+        `File with public_id "${publicId}" will remain in Cloudinary storage. ` +
+        `Please implement a backend endpoint for proper file deletion.`
+    );
+
+    // For now, we'll just log the warning and continue
+    // The file will be removed from the UI but not from Cloudinary
+    console.log(
+      "File removed from UI but not from Cloudinary storage:",
+      publicId
+    );
+
+    // Don't attempt actual deletion since it will fail with signature error
+    // This prevents the error from being thrown and breaking the UI
+  }
+
+  /**
+   * Extracts public ID from Cloudinary URL
+   */
+  extractPublicId(url: string): string | null {
+    if (!url.includes("cloudinary.com")) {
+      return null;
+    }
+
+    // Extract public ID from URL pattern: https://res.cloudinary.com/cloud_name/image/upload/v1234567890/folder/public_id.jpg
+    const match = url.match(
+      /\/upload\/(?:v\d+\/)?(?:.*\/)?([^/]+)(?:\.[^.]+)?$/
+    );
+    return match ? match[1] : null;
   }
 }

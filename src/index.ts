@@ -26,6 +26,7 @@ export {
   FirebaseStorageClass,
   createStorageProvider,
   uploadFile,
+  deleteFile,
 } from "./storage";
 
 // Utilities

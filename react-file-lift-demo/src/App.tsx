@@ -81,7 +81,6 @@ function App() {
 
 	const handleFilesAdded = (files: FileWithPreview[]) => {
 		setUploadedFiles(prev => [...prev, ...files]);
-		setIsUploading(true);
 	};
 
 	const handleUploadComplete = (files: FileWithPreview[]) => {
@@ -94,16 +93,19 @@ function App() {
 
 	const handleUploadError = (error: string, file: FileWithPreview) => {
 		console.error('Upload error:', error, file);
+		setIsUploading(false);
 		alert(`Upload failed for ${file.name}: ${error}`);
 	};
 
 	const handleCompressionComplete = (originalFile: File, compressedFile: File) => {
 		const compressionRatio = ((originalFile.size - compressedFile.size) / originalFile.size * 100).toFixed(1);
 		console.log(`Compressed ${originalFile.name}: ${originalFile.size} → ${compressedFile.size} bytes (${compressionRatio}% reduction)`);
+		setIsUploading(false);
 	};
 
 	const clearUploadedFiles = () => {
 		setUploadedFiles([]);
+		setIsUploading(false);
 	};
 
 	const isCloudConfigured = (config: CloudStorageConfig) => {
@@ -219,6 +221,31 @@ function App() {
 					/>
 				</section>
 
+				{/* Cloudinary Demo */}
+				<section className="demo-section">
+					<h2>☁️ Cloudinary Storage</h2>
+					<div className={`config-status ${isCloudConfigured(cloudinaryConfig) ? 'success' : 'warning'}`}>
+						{isCloudConfigured(cloudinaryConfig)
+							? '✅ Cloudinary credentials configured'
+							: '⚠️ Cloudinary requires configuration. Set REACT_APP_CLOUDINARY_CLOUD_NAME and REACT_APP_CLOUDINARY_API_KEY environment variables. Also install: npm install cloudinary'
+						}
+					</div>
+					<FileUploader
+						storageConfig={cloudinaryConfig}
+						multiple
+						accept="image/*"
+						maxFiles={5}
+						autoUpload={false}
+						showUploadButton={true}
+						maxSize={5 * 1024 * 1024} // 5MB
+						onFilesAdded={handleFilesAdded}
+						onUploadComplete={handleUploadComplete}
+						onUploadError={handleUploadError}
+						disabled={!isCloudConfigured(cloudinaryConfig) || isUploading}
+						className="cloudinary-uploader"
+					/>
+				</section>
+
 				{/* AWS S3 Demo */}
 				<section className="demo-section">
 					<h2>☁️ AWS S3 Cloud Storage</h2>
@@ -239,29 +266,6 @@ function App() {
 						onUploadError={handleUploadError}
 						disabled={!isCloudConfigured(awsConfig) || isUploading}
 						className="aws-uploader"
-					/>
-				</section>
-
-				{/* Cloudinary Demo */}
-				<section className="demo-section">
-					<h2>☁️ Cloudinary Storage</h2>
-					<div className={`config-status ${isCloudConfigured(cloudinaryConfig) ? 'success' : 'warning'}`}>
-						{isCloudConfigured(cloudinaryConfig)
-							? '✅ Cloudinary credentials configured'
-							: '⚠️ Cloudinary requires configuration. Set REACT_APP_CLOUDINARY_CLOUD_NAME and REACT_APP_CLOUDINARY_API_KEY environment variables. Also install: npm install cloudinary'
-						}
-					</div>
-					<FileUploader
-						storageConfig={cloudinaryConfig}
-						multiple
-						accept="image/*"
-						maxFiles={5}
-						maxSize={50 * 1024 * 1024} // 50MB
-						onFilesAdded={handleFilesAdded}
-						onUploadComplete={handleUploadComplete}
-						onUploadError={handleUploadError}
-						disabled={!isCloudConfigured(cloudinaryConfig) || isUploading}
-						className="cloudinary-uploader"
 					/>
 				</section>
 

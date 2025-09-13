@@ -150,19 +150,6 @@ export class SupabaseStorage {
   }
 
   /**
-   * Deletes a file from Supabase Storage
-   */
-  async deleteFile(filePath: string): Promise<void> {
-    const { error } = await this.supabase.storage
-      .from(this.config.bucket)
-      .remove([filePath]);
-
-    if (error) {
-      throw error;
-    }
-  }
-
-  /**
    * Lists files in a folder
    */
   async listFiles(folderPath?: string): Promise<any[]> {
@@ -205,5 +192,34 @@ export class SupabaseStorage {
     if (error) {
       throw error;
     }
+  }
+
+  /**
+   * Deletes a file from Supabase Storage
+   */
+  async deleteFile(filePath: string): Promise<void> {
+    const { error } = await this.supabase.storage
+      .from(this.config.bucket)
+      .remove([filePath]);
+
+    if (error) {
+      console.error("Supabase delete error:", error);
+      throw new Error(`Failed to delete file from Supabase: ${error.message}`);
+    }
+
+    console.log("File deleted successfully from Supabase:", filePath);
+  }
+
+  /**
+   * Extracts file path from Supabase URL
+   */
+  extractFilePath(url: string): string | null {
+    if (!url.includes("supabase.co") && !url.includes("supabase")) {
+      return null;
+    }
+
+    // Extract file path from URL pattern: https://project.supabase.co/storage/v1/object/public/bucket/path
+    const match = url.match(/\/storage\/v1\/object\/public\/[^\/]+\/(.+)$/);
+    return match ? decodeURIComponent(match[1]) : null;
   }
 }

@@ -1,10 +1,10 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { FileUploaderProps, FileWithPreview, UploadProgress } from '../types';
 import { Dropzone } from './Dropzone';
 import { FilePreview } from './FilePreview';
 import { createFileWithPreview, validateFile, revokeObjectURL } from '../utils/file';
 import { compressImage, shouldCompressFile } from '../utils/compression';
-import { createStorageProvider, uploadFile } from '../storage';
+import { createStorageProvider, uploadFile, StorageProvider } from '../storage';
 
 export const FileUploader: React.FC<FileUploaderProps> = ({
 	multiple = true,
@@ -15,26 +15,58 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 	dropzoneClassName = '',
 	previewClassName = '',
 	disabled = false,
+	autoUpload = true,
+	showUploadButton = false,
 	enableCompression = true,
 	compressionOptions = {},
 	storageConfig,
 	onFilesAdded,
 	onFilesRemoved,
+	onRemove,
 	onUploadProgress,
 	onUploadComplete,
 	onUploadError,
 	onCompressionComplete,
+	onDeleteError,
 	customUploadHandler,
 }) => {
 	const [files, setFiles] = useState<FileWithPreview[]>([]);
 	const [isUploading, setIsUploading] = useState(false);
+	const [storageProvider, setStorageProvider] = useState<StorageProvider | null>(null);
+	const processFilesRef = useRef<Function | null>(null);
+	const updateFileStatusRef = useRef<Function | null>(null);
 
 	// Cleanup object URLs on unmount
 	useEffect(() => {
 		return () => {
 			files.forEach(revokeObjectURL);
 		};
-	}, []);
+	}, [files]);
+
+	// Create storage provider when storageConfig changes
+	useEffect(() => {
+		if (storageConfig) {
+			// Use the imported createStorageProvider function
+			const provider = createStorageProvider(storageConfig);
+			setStorageProvider(provider);
+		} else {
+			setStorageProvider(null);
+		}
+	}, [storageConfig]);
+
+	// Handle auto-upload when files are added
+	useEffect(() => {
+		if (autoUpload && files.length > 0 && processFilesRef.current) {
+			const pendingFiles = files.filter(file => file.status === 'pending');
+			if (pendingFiles.length > 0 && (enableCompression || storageConfig || customUploadHandler)) {
+				// Use a timeout to avoid circular dependency
+				const timeoutId = setTimeout(() => {
+					processFilesRef.current?.(pendingFiles);
+				}, 0);
+				return () => clearTimeout(timeoutId);
+			}
+		}
+	}, [files, autoUpload, enableCompression, storageConfig, customUploadHandler]);
 
 	const handleFilesAdded = useCallback((newFiles: File[]) => {
 		if (disabled) return;
@@ -75,18 +107,13 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 			const updatedFiles = multiple ? [...files, ...validatedFiles] : validatedFiles;
 			setFiles(updatedFiles);
 			onFilesAdded?.(validatedFiles);
-
-			// Auto-start compression and upload if enabled
-			if (enableCompression || storageConfig || customUploadHandler) {
-				processFiles(validatedFiles);
-			}
 		}
 
 		// Show errors
 		if (errors.length > 0) {
 			console.warn('File validation errors:', errors);
 		}
-	}, [files, disabled, maxFiles, maxSize, accept, multiple, enableCompression, storageConfig, customUploadHandler, onFilesAdded]);
+	}, [files, disabled, maxFiles, maxSize, accept, multiple, onFilesAdded]);
 
 	const processFiles = useCallback(async (filesToProcess: FileWithPreview[]) => {
 		setIsUploading(true);
@@ -95,7 +122,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 		for (const file of filesToProcess) {
 			try {
 				// Update file status
-				updateFileStatus(file.id, 'uploading', 0);
+				updateFileStatusRef.current?.(file.id, 'uploading', 0);
 
 				console.log('Processing file:', file.name, {
 					fileType: typeof file,
@@ -119,7 +146,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 
 				// Compress if enabled and applicable
 				if (enableCompression && shouldCompressFile(file, compressionOptions.maxSizeMB) && !file.compressedFile) {
-					updateFileStatus(file.id, 'compressed');
+					updateFileStatusRef.current?.(file.id, 'compressed');
 
 					const compressedFile = await compressImage(file, compressionOptions);
 
@@ -160,7 +187,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 						storageProvider,
 						fileToUpload,
 						undefined,
-						(progress) => updateFileStatus(file.id, 'uploading', progress)
+						(progress) => updateFileStatusRef.current?.(file.id, 'uploading', progress)
 					);
 				} else {
 					throw new Error('No upload handler or storage config provided');
@@ -205,7 +232,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 
 				const errorMessage = error instanceof Error ? error.message : 'Upload failed';
 
-				updateFileStatus(file.id, 'error', undefined, errorMessage);
+				updateFileStatusRef.current?.(file.id, 'error', undefined, errorMessage);
 				onUploadError?.(errorMessage, file);
 			}
 		}
@@ -246,6 +273,12 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 		});
 	}, [onUploadProgress]);
 
+	// Set the refs for processFiles and updateFileStatus
+	useEffect(() => {
+		processFilesRef.current = processFiles;
+		updateFileStatusRef.current = updateFileStatus;
+	}, [processFiles, updateFileStatus]);
+
 	const handleFileRemove = useCallback((fileId: string) => {
 		const fileToRemove = files.find(f => f.id === fileId);
 		if (fileToRemove) {
@@ -254,8 +287,11 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 			const updatedFiles = files.filter(f => f.id !== fileId);
 			setFiles(updatedFiles);
 			onFilesRemoved?.([fileToRemove]);
+
+			// Call user's onRemove callback
+			onRemove?.(fileId);
 		}
-	}, [files, onFilesRemoved]);
+	}, [files, onFilesRemoved, onRemove]);
 
 	const handleFileRetry = useCallback((fileId: string) => {
 		const fileToRetry = files.find(f => f.id === fileId);
@@ -264,11 +300,41 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 		}
 	}, [files, processFiles]);
 
+	const handleFileUpload = useCallback((fileId: string) => {
+		const fileToUpload = files.find(f => f.id === fileId);
+		if (fileToUpload) {
+			processFiles([fileToUpload]);
+		}
+	}, [files, processFiles]);
+
 	const clearAllFiles = useCallback(() => {
 		files.forEach(revokeObjectURL);
 		setFiles([]);
 		onFilesRemoved?.(files);
 	}, [files, onFilesRemoved]);
+
+	const handleUploadAll = useCallback(() => {
+		const pendingFiles = files.filter(file => file.status === 'pending');
+		if (pendingFiles.length > 0) {
+			processFiles(pendingFiles);
+		}
+	}, [files, processFiles]);
+
+	// Determine if upload button should be shown
+	const shouldShowUploadButton = showUploadButton || (!autoUpload && (storageConfig || customUploadHandler));
+	const hasPendingFiles = files.some(file => file.status === 'pending');
+
+	// Debug logging
+	console.log('Upload button logic:', {
+		shouldShowUploadButton,
+		hasPendingFiles,
+		autoUpload,
+		showUploadButton,
+		hasStorageConfig: !!storageConfig,
+		hasCustomHandler: !!customUploadHandler,
+		filesCount: files.length,
+		fileStatuses: files.map(f => ({ id: f.id, status: f.status }))
+	});
 
 	return (
 		<div className={`rfl-file-uploader ${className}`}>
@@ -287,13 +353,24 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 						<h3 className="rfl-file-uploader__title">
 							Files ({files.length}{maxFiles && `/${maxFiles}`})
 						</h3>
-						<button
-							className="rfl-file-uploader__clear-all"
-							onClick={clearAllFiles}
-							disabled={isUploading}
-						>
-							Clear All
-						</button>
+						<div className="rfl-file-uploader__actions">
+							{shouldShowUploadButton && hasPendingFiles && (
+								<button
+									className="rfl-file-uploader__upload-btn"
+									onClick={handleUploadAll}
+									disabled={isUploading || hasPendingFiles}
+								>
+									{isUploading ? 'Uploading...' : 'Upload All'}
+								</button>
+							)}
+							<button
+								className="rfl-file-uploader__clear-all"
+								onClick={clearAllFiles}
+								disabled={isUploading}
+							>
+								Clear All
+							</button>
+						</div>
 					</div>
 
 					<div className="rfl-file-uploader__previews">
@@ -303,8 +380,12 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 								file={file}
 								onRemove={handleFileRemove}
 								onRetry={handleFileRetry}
+								onUpload={handleFileUpload}
 								className={previewClassName}
 								showProgress={true}
+								showUploadButton={!autoUpload}
+								storageProvider={storageProvider}
+								onDeleteError={onDeleteError}
 							/>
 						))}
 					</div>

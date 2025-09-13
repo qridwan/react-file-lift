@@ -156,18 +156,6 @@ export class FirebaseStorageClass {
   }
 
   /**
-   * Deletes a file from Firebase Storage
-   */
-  async deleteFile(filePath: string): Promise<void> {
-    const fileRef = ref(this.storage, filePath);
-    // Note: Firebase v9+ doesn't have a direct delete method in the client SDK
-    // This would typically be done through Cloud Functions or Admin SDK
-    throw new Error(
-      "File deletion not supported in client SDK. Use Cloud Functions or Admin SDK."
-    );
-  }
-
-  /**
    * Lists files in a folder (requires Cloud Functions)
    */
   async listFiles(folderPath?: string): Promise<any[]> {
@@ -206,5 +194,38 @@ export class FirebaseStorageClass {
   async getStorage(): Promise<any> {
     await this.ensureSDKLoaded();
     return this.storage;
+  }
+
+  /**
+   * Deletes a file from Firebase Storage
+   */
+  async deleteFile(filePath: string): Promise<void> {
+    try {
+      const storage = await this.getStorage();
+      const { deleteObject, ref } = await import("firebase/storage");
+
+      const fileRef = ref(storage, filePath);
+      await deleteObject(fileRef);
+
+      console.log("File deleted successfully from Firebase:", filePath);
+    } catch (error) {
+      console.error("Firebase delete error:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to delete file from Firebase: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Extracts file path from Firebase URL
+   */
+  extractFilePath(url: string): string | null {
+    if (!url.includes("firebase") && !url.includes("googleapis.com")) {
+      return null;
+    }
+
+    // Extract file path from URL pattern: https://firebasestorage.googleapis.com/v0/b/bucket/o/path%2Ffile?alt=media
+    const match = url.match(/\/o\/(.+?)(?:\?|$)/);
+    return match ? decodeURIComponent(match[1]) : null;
   }
 }

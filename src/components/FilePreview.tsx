@@ -27,21 +27,77 @@ export const FilePreview: React.FC<FilePreviewProps> = memo(({
 	file,
 	onRemove,
 	onRetry,
+	onUpload,
 	className = '',
 	showProgress = true,
+	showUploadButton = false,
 	onImageLoad,
 	onImageError,
+	storageProvider,
+	onDeleteError,
 }) => {
 	// Memoized handlers to prevent unnecessary re-renders
-	const handleRemove = useCallback(() => {
+	const handleRemove = useCallback(async () => {
+		if (file.uploadedUrl && storageProvider) {
+			try {
+				// Use the storage provider's delete method directly
+				// This avoids the import issue in the built package
+				if (typeof storageProvider.deleteFile === 'function') {
+					// Extract the appropriate identifier based on storage provider type
+					let identifier: string | null = null;
+
+					if ('extractPublicId' in storageProvider) {
+						// Cloudinary
+						identifier = storageProvider.extractPublicId(file.uploadedUrl);
+					} else if ('extractKey' in storageProvider) {
+						// AWS S3
+						identifier = storageProvider.extractKey(file.uploadedUrl);
+					} else if ('extractFilePath' in storageProvider) {
+						// Supabase or Firebase
+						identifier = storageProvider.extractFilePath(file.uploadedUrl);
+					}
+
+					if (identifier) {
+						await storageProvider.deleteFile(identifier);
+						console.log('Cloud file deletion attempted for:', file.uploadedUrl);
+					} else {
+						console.warn('Could not extract file identifier from URL:', file.uploadedUrl);
+					}
+				} else {
+					console.warn('Storage provider does not support file deletion');
+				}
+			} catch (error) {
+				// Only call onDeleteError for actual errors, not expected limitations
+				const errorMessage = error instanceof Error ? error.message : String(error);
+				if (!errorMessage.includes('server-side implementation') &&
+					!errorMessage.includes('not supported from client-side')) {
+					console.error('Cloud file deletion failed (continuing with local removal):', error);
+					if (onDeleteError) {
+						onDeleteError(file, error instanceof Error ? error : new Error(String(error)));
+					}
+				} else {
+					// This is expected behavior for Cloudinary, just log info
+					console.log('Cloud file deletion not supported (expected for Cloudinary):', errorMessage);
+				}
+				// Continue with local removal regardless
+			}
+		}
+
+		// Always remove from local state
 		onRemove(file.id);
-	}, [onRemove, file.id]);
+	}, [onRemove, file, storageProvider, onDeleteError]);
 
 	const handleRetry = useCallback(() => {
 		if (onRetry) {
 			onRetry(file.id);
 		}
 	}, [onRetry, file.id]);
+
+	const handleUpload = useCallback(() => {
+		if (onUpload) {
+			onUpload(file.id);
+		}
+	}, [onUpload, file.id]);
 
 	const handleImageLoad = useCallback(() => {
 		if (onImageLoad) {
@@ -241,6 +297,18 @@ export const FilePreview: React.FC<FilePreviewProps> = memo(({
 							<span aria-hidden="true">👁️</span>
 							<span className="sr-only">View file</span>
 						</a>
+					)}
+					{file.status === 'pending' && showUploadButton && onUpload && (
+						<button
+							className="rfl-file-preview__button rfl-file-preview__button--upload"
+							onClick={handleUpload}
+							title="Upload file"
+							aria-label={`Upload file: ${file.name}`}
+							type="button"
+						>
+							<span aria-hidden="true">⬆️</span>
+							<span className="sr-only">Upload file</span>
+						</button>
 					)}
 					<button
 						className="rfl-file-preview__button rfl-file-preview__button--remove"

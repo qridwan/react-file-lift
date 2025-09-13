@@ -4,6 +4,7 @@ import { AWSConfig } from "../types";
 // Dynamic imports for peer dependencies
 let S3Client: any;
 let PutObjectCommand: any;
+let DeleteObjectCommand: any;
 let getSignedUrl: any;
 
 // Lazy load AWS SDK
@@ -15,6 +16,7 @@ async function loadAWSSDK() {
 
       S3Client = s3Module.S3Client;
       PutObjectCommand = s3Module.PutObjectCommand;
+      DeleteObjectCommand = s3Module.DeleteObjectCommand;
       getSignedUrl = presignerModule.getSignedUrl;
     } catch (error) {
       throw new Error(
@@ -156,5 +158,38 @@ export class AWSStorage {
    */
   private getFileUrl(key: string): string {
     return `https://${this.config.bucket}.s3.${this.config.region}.amazonaws.com/${key}`;
+  }
+
+  /**
+   * Deletes a file from S3
+   */
+  async deleteFile(key: string): Promise<void> {
+    try {
+      const command = new DeleteObjectCommand({
+        Bucket: this.config.bucket,
+        Key: key,
+      });
+
+      await this.s3Client.send(command);
+      console.log("File deleted successfully from S3:", key);
+    } catch (error) {
+      console.error("S3 delete error:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to delete file from S3: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Extracts S3 key from URL
+   */
+  extractKey(url: string): string | null {
+    if (!url.includes("amazonaws.com") && !url.includes("s3")) {
+      return null;
+    }
+
+    // Extract key from URL pattern: https://bucket.s3.region.amazonaws.com/key
+    const match = url.match(/https:\/\/[^\/]+\/(.+)$/);
+    return match ? decodeURIComponent(match[1]) : null;
   }
 }
