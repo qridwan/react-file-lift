@@ -28,7 +28,7 @@ export const FilePreview: React.FC<FilePreviewProps> = memo(({
 	onRemove,
 	onRetry,
 	onUpload,
-	className = '',
+	className = 'flex gap-2',
 	showProgress = true,
 	showUploadButton = false,
 	onImageLoad,
@@ -190,32 +190,33 @@ export const FilePreview: React.FC<FilePreviewProps> = memo(({
 			role="listitem"
 			aria-label={`File: ${file.name}, Status: ${statusConfig.text}`}
 		>
-			<div className="rfl-file-preview__content">
-				{/* File Thumbnail */}
-				<div className="rfl-file-preview__thumbnail" role="img" aria-label={`File thumbnail for ${file.name}`}>
-					{isImageFile(file) && imageSource ? (
-						<img
-							src={imageSource}
-							alt={`Preview of ${file.name}`}
-							className="rfl-file-preview__image"
-							loading="lazy"
-							onLoad={handleImageLoad}
-							onError={handleImageError}
-						/>
-					) : (
-						<div className="rfl-file-preview__file-icon" aria-hidden="true">
-							{fileTypeIcon}
-						</div>
-					)}
-					<div
-						className="rfl-file-preview__status-icon"
-						aria-label={statusConfig.ariaLabel}
-						title={statusConfig.text}
-					>
-						{statusConfig.icon}
+			{/* File Thumbnail */}
+			<div className="rfl-file-preview__thumbnail" role="img" aria-label={`File thumbnail for ${file.name}`}>
+				{isImageFile(file) && imageSource ? (
+					<img
+						src={imageSource}
+						alt={`Preview of ${file.name}`}
+						className="rfl-file-preview__image"
+						loading="lazy"
+						onLoad={handleImageLoad}
+						onError={handleImageError}
+					/>
+				) : (
+					<div className="rfl-file-preview__file-icon" aria-hidden="true">
+						{fileTypeIcon}
 					</div>
+				)}
+				<div
+					className="rfl-file-preview__status-icon"
+					aria-label={statusConfig.ariaLabel}
+					title={statusConfig.text}
+				>
+					{statusConfig.icon}
 				</div>
+			</div>
 
+			{/* File Content */}
+			<div className="rfl-file-preview__content">
 				{/* File Info */}
 				<div className="rfl-file-preview__info">
 					<div
@@ -225,17 +226,19 @@ export const FilePreview: React.FC<FilePreviewProps> = memo(({
 					>
 						{file.name}
 					</div>
-					<div
-						className="rfl-file-preview__size"
-						aria-label={`File size: ${formatFileSize(file.size)}`}
-					>
-						{formatFileSize(file.size)}
-					</div>
-					<div
-						className={`rfl-file-preview__status rfl-file-preview__status--${file.status}`}
-						aria-label={`Upload status: ${statusConfig.text}`}
-					>
-						{statusConfig.text}
+					<div className="rfl-file-preview__meta">
+						<div
+							className="rfl-file-preview__size"
+							aria-label={`File size: ${formatFileSize(file.size)}`}
+						>
+							{formatFileSize(file.size)}
+						</div>
+						<div
+							className={`rfl-file-preview__status rfl-file-preview__status--${file.status}`}
+							aria-label={`Upload status: ${statusConfig.text}`}
+						>
+							{statusConfig.text}
+						</div>
 					</div>
 					{file.error && (
 						<div
@@ -271,56 +274,57 @@ export const FilePreview: React.FC<FilePreviewProps> = memo(({
 					</div>
 				)}
 
-				{/* Actions */}
-				<div className="rfl-file-preview__actions" role="toolbar" aria-label="File actions">
-					{file.status === 'error' && onRetry && (
-						<button
-							className="rfl-file-preview__button rfl-file-preview__button--retry"
-							onClick={handleRetry}
-							title="Retry upload"
-							aria-label="Retry uploading this file"
-							type="button"
-						>
-							<span aria-hidden="true">🔄</span>
-							<span className="sr-only">Retry upload</span>
-						</button>
-					)}
-					{file.uploadedUrl && (
-						<a
-							href={file.uploadedUrl}
-							target="_blank"
-							rel="noopener noreferrer"
-							className="rfl-file-preview__button rfl-file-preview__button--view"
-							title="View file"
-							aria-label={`View uploaded file: ${file.name}`}
-						>
-							<span aria-hidden="true">👁️</span>
-							<span className="sr-only">View file</span>
-						</a>
-					)}
-					{file.status === 'pending' && showUploadButton && onUpload && (
-						<button
-							className="rfl-file-preview__button rfl-file-preview__button--upload"
-							onClick={handleUpload}
-							title="Upload file"
-							aria-label={`Upload file: ${file.name}`}
-							type="button"
-						>
-							<span aria-hidden="true">⬆️</span>
-							<span className="sr-only">Upload file</span>
-						</button>
-					)}
+			</div>
+
+			{/* Actions */}
+			<div className="rfl-file-preview__actions" role="toolbar" aria-label="File actions">
+				{file.status === 'error' && onRetry && (
 					<button
-						className="rfl-file-preview__button rfl-file-preview__button--remove"
-						onClick={handleRemove}
-						title="Remove file"
-						aria-label={`Remove file: ${file.name}`}
+						className="rfl-file-preview__button rfl-file-preview__button--retry"
+						onClick={handleRetry}
+						title="Retry upload"
+						aria-label="Retry uploading this file"
 						type="button"
 					>
-						<span aria-hidden="true">🗑️</span>
-						<span className="sr-only">Remove file</span>
+						<span aria-hidden="true">🔄</span>
+						<span className="sr-only">Retry upload</span>
 					</button>
-				</div>
+				)}
+				{file.uploadedUrl && (
+					<a
+						href={file.uploadedUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+						className="rfl-file-preview__button rfl-file-preview__button--view"
+						title="View file"
+						aria-label={`View uploaded file: ${file.name}`}
+					>
+						<span aria-hidden="true">👁️</span>
+						<span className="sr-only">View file</span>
+					</a>
+				)}
+				{file.status === 'pending' && showUploadButton && onUpload && (
+					<button
+						className="rfl-file-preview__button rfl-file-preview__button--upload"
+						onClick={handleUpload}
+						title="Upload file"
+						aria-label={`Upload file: ${file.name}`}
+						type="button"
+					>
+						<span aria-hidden="true">⬆️</span>
+						<span className="sr-only">Upload file</span>
+					</button>
+				)}
+				<button
+					className="rfl-file-preview__button rfl-file-preview__button--remove"
+					onClick={handleRemove}
+					title="Remove file"
+					aria-label={`Remove file: ${file.name}`}
+					type="button"
+				>
+					<span aria-hidden="true">🗑️</span>
+					<span className="sr-only">Remove file</span>
+				</button>
 			</div>
 
 			{/* Compression Info */}
